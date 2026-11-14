@@ -72,7 +72,7 @@ header nav{margin-left:auto;display:flex;gap:18px;font-size:14px}header nav a{co
 /* SELENE panel */
 .ai{display:flex;flex-direction:column;position:sticky;top:16px;max-height:calc(100vh - 32px);padding:0;overflow:hidden}
 @media(max-width:1050px){.ai{position:static;max-height:none}}
-.logo{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line)}.logo canvas{width:52px;height:52px}
+.logo{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line)}.logo canvas{width:88px;height:88px;margin:-10px -4px -10px -6px;flex:none}
 .logo b{font-size:17px;font-weight:700}.logo span{color:var(--mut);font-size:13px;margin-left:8px;font-weight:400}.mode{font-size:13px;color:var(--dim)}
 .log{flex:1;overflow:auto;display:flex;flex-direction:column;gap:12px;padding:16px;min-height:220px}
 .m{max-width:92%;white-space:pre-wrap;font-size:14.5px;line-height:1.55}
@@ -96,7 +96,7 @@ footer{color:var(--dim);font-size:13px;padding:18px 24px 28px;max-width:1500px;m
 </header>
 <div class="grid">
   <section class="card ai" aria-label="Talk to SELENE">
-    <div class="logo"><canvas id="logo" width="104" height="104"></canvas><div><b>SELENE<span id="lstate">idle</span></b><div class="mode">Rules run in your browser. Nothing is sent to a server.</div></div></div>
+    <div class="logo"><canvas id="logo" width="176" height="176" role="img" aria-label="SELENE logo: a Moon made of particles"></canvas><div><b>SELENE<span id="lstate">idle</span></b><div class="mode">Rules run in your browser. Nothing is sent to a server.</div></div></div>
     <div class="log" id="log" aria-live="polite"></div>
     <div class="compose">
       <div class="quick" id="quick"></div>
@@ -307,15 +307,34 @@ function frame(ts){ const t=ts/1000, hist=DATA[S.aid].hr; const W=hrc.width, H=h
     const pk=Math.exp(-Math.pow((ph-0.2)/0.012,2))-Math.exp(-Math.pow((ph-0.24)/0.015,2))*0.3+Math.exp(-Math.pow((ph-0.42)/0.045,2))*0.16+Math.exp(-Math.pow((ph-0.08)/0.03,2))*0.08;
     const y=H*0.66-pk*H*0.55; pen?hg.lineTo(x,y):hg.moveTo(x,y); pen=true; } hg.stroke();
   hg.fillStyle='#5f6b76'; hg.font='500 22px "Public Sans",sans-serif'; hg.fillText(`II   last ${hist.length} readings ${Math.min(...hist)}-${Math.max(...hist)} bpm`,12,30);
-  // SELENE logo: crescent Moon (mission), orbiting spark (AI), heartbeat (health)
-  const S2=192, cx=96, cy=96; lg.setTransform(lc.width/192,0,0,lc.width/192,0,0); lg.clearRect(0,0,S2,S2); const pulse=state==='speaking'?1+0.06*Math.sin(t*12):state==='listening'?1+0.04*Math.sin(t*5):1;
-  const grd=lg.createRadialGradient(cx,cy,10,cx,cy,90); grd.addColorStop(0,'rgba(123,97,255,0)'); grd.addColorStop(1,'transparent'); lg.fillStyle=grd; lg.fillRect(0,0,S2,S2);
-  lg.save(); lg.translate(cx,cy); lg.scale(pulse,pulse); const cg=lg.createLinearGradient(-50,-50,50,50); cg.addColorStop(0,'#3DDCFF'); cg.addColorStop(0.5,'#7B61FF'); cg.addColorStop(1,'#FF5FD2');
-  lg.fillStyle=cg; lg.beginPath(); lg.arc(0,0,52,0,Math.PI*2); lg.arc(20,-14,46,0,Math.PI*2,true); lg.fill('evenodd'); lg.restore();
-  const sp=state==='thinking'?3:1.2, ax=cx+Math.cos(t*sp)*70, ay=cy+Math.sin(t*sp)*28; lg.strokeStyle='rgba(61,220,255,.35)'; lg.lineWidth=1.5; lg.beginPath(); lg.ellipse(cx,cy,70,28,0,0,Math.PI*2); lg.stroke();
-  lg.fillStyle='#fff'; lg.shadowColor='#3DDCFF'; lg.shadowBlur=18; lg.beginPath(); lg.arc(ax,ay,5,0,7); lg.fill(); lg.shadowBlur=0;
-  lg.strokeStyle='#3DDC97'; lg.lineWidth=3; lg.beginPath(); const hb=(t*1.2)%1; for(let x=-34;x<=34;x++){ const k=(x+34)/68; const y=Math.abs(k-0.5)<0.08?-Math.sin((k-0.42)/0.16*Math.PI*2)*(hb<0.3?18:12):0; x===-34?lg.moveTo(cx-14+x,cy+18+y):lg.lineTo(cx-14+x,cy+18+y); } lg.stroke();
+  drawLogo(t);
   requestAnimationFrame(frame); }
+// ---------------------------------------------------------------- SELENE logo: a Moon made of particles
+// ~450 points on a sphere (Fibonacci spiral), lit from one side so it reads as a crescent. Motion shows state:
+// idle = slow drift, listening = ripples, thinking = bands swirl, speaking = surface pulses with the voice.
+const PN=450, PTS=[], GA=Math.PI*(3-Math.sqrt(5));
+for(let i=0;i<PN;i++){ const y=1-2*(i+0.5)/PN, r=Math.sqrt(1-y*y), a=i*GA; PTS.push([Math.cos(a)*r,y,Math.sin(a)*r,Math.random()*6.28]); }
+const LCOL={idle:[214,222,232],listening:[60,200,240],thinking:[90,169,214],speaking:[236,240,245]};
+let lcol=[214,222,232], spin=0, lastT=0, energy=0;
+function drawLogo(t){ const W=lc.width, H=lc.height, cx=W/2, cy=H/2, R=W*0.41, dt=Math.min(0.05,t-lastT||0.016); lastT=t;
+  const target=LCOL[state]||LCOL.idle; for(let k=0;k<3;k++) lcol[k]+=(target[k]-lcol[k])*0.08;
+  energy+=((state==='idle'?0:1)-energy)*0.06; spin+=dt*(state==='thinking'?1.6:0.25);
+  lg.setTransform(1,0,0,1,0,0); lg.clearRect(0,0,W,H);
+  const cs=Math.cos(spin), sn=Math.sin(spin), tilt=0.35, ct=Math.cos(tilt), st=Math.sin(tilt);
+  const L=[-0.80,0.32,0.50]; // sunlight from the upper left, slightly toward the viewer: a waxing crescent
+  const voice=state==='speaking'?0.5+0.5*Math.sin(t*11)*Math.sin(t*3.7):0;
+  for(const [x0,y0,z0,ph] of PTS){
+    let x=x0*cs+z0*sn, z=-x0*sn+z0*cs, y=y0*ct-z*st; z=y0*st+z*ct;           // spin, then tilt
+    let d=1+0.015*Math.sin(t*0.8+ph);                                           // idle shimmer
+    if(state==='listening') d+=0.07*energy*Math.sin(y0*9-t*6);                  // ripples travel up the sphere
+    if(state==='thinking') d+=0.05*energy*Math.sin(Math.atan2(z0,x0)*4+t*5);    // swirling bands
+    if(state==='speaking') d+=0.12*energy*voice*(0.6+0.4*Math.sin(ph*3+t*9));   // pulses with speech
+    if(z<-0.15) continue;                                                       // back side hidden
+    // light in view space, so the crescent stays put while the particles flow through it, like the real Moon
+    const lit=Math.max(0,Math.min(1,(x*L[0]+y*L[1]+z*L[2])*1.4+0.1)), a=0.07+0.93*Math.pow(lit,0.8), size=(W/72)*(0.6+0.4*(z+0.15)/1.15)*(0.75+0.45*lit);
+    lg.fillStyle=`rgba(${lcol[0]|0},${lcol[1]|0},${lcol[2]|0},${a.toFixed(3)})`;
+    lg.fillRect(cx+x*R*d-size/2, cy-y*R*d-size/2, size, size); } }
+
 render(); requestAnimationFrame(frame);
 setTimeout(()=>{ add('s',`Good ${(h=>h<12?'morning':h<18?'afternoon':'evening')(new Date().getHours())}, ${S.aid}. `+(phys().status==='GREEN'?'Your numbers look steady today.':'One of your numbers needs a look; see Alerts.')+" Ask how you're doing, log exercise or water, or tell me how you feel.\n\nThis is a demo: the crew data is simulated."); },400);
 </script>
