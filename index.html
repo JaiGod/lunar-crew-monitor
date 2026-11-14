@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SELENE Web · Lunar Habitat AI · Project ARES</title>
+<title>SELENE: crew health assistant for a lunar habitat</title>
 <meta name="description" content="SELENE, the Space Environment Life & Neuro-health Engine: an AI health companion for astronauts on the Moon. Crew vitals, brainwaves, mood, smart habitat, voice and a camera check-in, in your browser. NASA HUNCH Project ARES.">
 <meta name="theme-color" content="#060818">
 <meta property="og:type" content="website"><meta property="og:title" content="SELENE Web · Lunar Habitat AI"><meta property="og:description" content="An AI health companion for astronauts on the Moon. Runs in your browser.">
@@ -13,7 +13,7 @@
    bedside-monitor parameter colours (HR green, SpO2 cyan). One typeface, Public Sans, tabular figures. */
 :root{--page:#151b22;--panel:#1d242d;--raise:#26303b;--line:#2f3a46;--txt:#e3e8ee;--mut:#93a0ad;--dim:#66737f;
   --ok:#3fb950;--caut:#e3a92b;--warn:#e5484d;--info:#5aa9d6;--hr:#4cd964;--spo2:#3cc8f0;--fill:#7d93a8;--tint:transparent}
-*{box-sizing:border-box;margin:0}
+*{box-sizing:border-box;margin:0}[hidden]{display:none!important}
 html{background:var(--page)}
 body{color:var(--txt);font:15px/1.5 'Public Sans',system-ui,sans-serif;font-variant-numeric:tabular-nums;min-height:100vh}
 body::after{content:"";position:fixed;inset:0;pointer-events:none;background:var(--tint);mix-blend-mode:soft-light;transition:background 1.5s;z-index:50}
@@ -25,7 +25,7 @@ header nav{margin-left:auto;display:flex;gap:18px;font-size:14px}header nav a{co
 .crewbar{display:flex;border:1px solid var(--line);border-radius:5px;overflow:hidden}
 .crewbar .pill{background:none;border:0;border-right:1px solid var(--line);padding:6px 14px;font-size:14px;color:var(--mut)}
 .crewbar .pill:last-child{border-right:0}.crewbar .pill.on{background:var(--raise);color:var(--txt);box-shadow:inset 0 -2px 0 var(--txt)}
-.grid{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:16px;padding:16px 24px 32px;max-width:1500px;margin:0 auto;align-items:start}
+.grid{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;padding:16px 24px 32px;max-width:1500px;margin:0 auto;align-items:start}
 @media(max-width:1050px){.grid{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:620px){.grid{padding:12px}header{padding:10px 12px}header nav{margin-left:0}}
 .right{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;grid-row:1;align-items:start}
@@ -69,41 +69,53 @@ header nav{margin-left:auto;display:flex;gap:18px;font-size:14px}header nav a{co
 .cam .tm{position:absolute;left:8px;top:8px;font-size:12.5px;background:rgba(0,0,0,.7);padding:2px 8px;border-radius:3px;color:var(--mut)}
 .btn{border:1px solid var(--txt);border-radius:4px;padding:8px 14px;font-weight:600;background:var(--txt);color:#141a20}
 .btn.ghost{background:none;border-color:var(--line);color:var(--txt)}.btn.ghost:hover{border-color:var(--mut)}.btn.on{border-color:var(--ok);color:var(--ok)}
-/* SELENE panel */
-.ai{display:flex;flex-direction:column;position:sticky;top:16px;max-height:calc(100vh - 32px);padding:0;overflow:hidden}
-@media(max-width:1050px){.ai{position:static;max-height:none}}
-.logo{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line)}.logo canvas{width:88px;height:88px;margin:-10px -4px -10px -6px;flex:none}
-.logo b{font-size:17px;font-weight:700}.logo span{color:var(--mut);font-size:13px;margin-left:8px;font-weight:400}.mode{font-size:13px;color:var(--dim)}
-.log{flex:1;overflow:auto;display:flex;flex-direction:column;gap:12px;padding:16px;min-height:220px}
-.m{max-width:92%;white-space:pre-wrap;font-size:14.5px;line-height:1.55}
-.m.s{align-self:flex-start}.m.u{align-self:flex-end;background:var(--raise);padding:7px 11px;border-radius:6px 6px 2px 6px}
-.m.alert{align-self:stretch;max-width:none;border-left:3px solid var(--warn);padding:4px 10px;color:#ffc9cb}
+/* Talk view: the particle Moon in the centre, conversation under it, input pinned to the bottom */
+.talk{max-width:760px;margin:0 auto;padding:0 20px;display:flex;flex-direction:column;min-height:calc(100vh - 66px)}
+.orb{text-align:center;padding:5vh 0 8px;transition:padding .5s}
+.orb canvas{width:280px;height:280px;transition:width .5s,height .5s}
+.talk.chatting .orb{position:sticky;top:0;z-index:5;background:var(--page);display:flex;align-items:center;gap:6px;padding:8px 0;border-bottom:1px solid var(--line)}.talk.chatting .orb canvas{width:64px;height:64px;margin:-6px 0}.talk.chatting .who{margin:0}
+.who{margin-top:4px}.who b{font-size:22px;font-weight:700}.who span{color:var(--mut);margin-left:10px;font-size:15px}
+.mode{color:var(--dim);font-size:14px;margin:6px auto 0;max-width:46ch}.talk.chatting .mode{display:none}
+.log{flex:1;display:flex;flex-direction:column;gap:14px;padding:18px 0}
+.m{max-width:88%;white-space:pre-wrap;font-size:15.5px;line-height:1.6}
+.m.s{align-self:flex-start}.m.u{align-self:flex-end;background:var(--raise);padding:8px 12px;border-radius:8px 8px 2px 8px}
+.m.alert{align-self:stretch;max-width:none;border-left:3px solid var(--warn);padding:4px 12px;color:#ffc9cb}
 .fb{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}.fb button{font-size:13px;padding:3px 9px;border-radius:4px;border:1px solid var(--line);background:none;color:var(--mut)}.fb button:hover{color:var(--txt);border-color:var(--mut)}
-.compose{border-top:1px solid var(--line);padding:12px 16px 14px}
-.quick{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}.quick button{font-size:13px;padding:3px 9px;border-radius:4px;border:1px solid var(--line);background:none;color:var(--mut)}.quick button:hover{color:var(--txt);border-color:var(--mut)}
-form{display:flex;gap:6px}input{flex:1;min-width:0;background:var(--page);border:1px solid var(--line);border-radius:4px;color:var(--txt);padding:8px 10px;font:inherit}
-.tools{display:flex;gap:16px;white-space:nowrap;margin-top:10px;font-size:13px}.tools button{background:none;border:0;padding:0;color:var(--mut);text-decoration:underline;text-underline-offset:3px}.tools button:hover{color:var(--txt)}
-#breath{position:fixed;inset:0;z-index:60;background:rgba(10,14,18,.94);display:none;place-items:center}
-#breath.on{display:grid}#breath .o{width:220px;height:220px;border-radius:50%;border:2px solid var(--txt);display:grid;place-items:center;transition:transform 4s ease-in-out}
+.compose{position:sticky;bottom:0;background:var(--page);padding:10px 0 18px;border-top:1px solid transparent}
+.talk.chatting .compose{border-top-color:var(--line)}
+.quick{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;justify-content:center}.talk.chatting .quick{justify-content:flex-start}
+.quick button{font-size:13.5px;padding:5px 11px;border-radius:4px;border:1px solid var(--line);background:none;color:var(--mut)}.quick button:hover{color:var(--txt);border-color:var(--mut)}
+form{display:flex;gap:6px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px}
+form:focus-within{border-color:var(--mut)}
+input{flex:1;min-width:0;background:none;border:0;color:var(--txt);padding:8px 8px;font:inherit;font-size:15.5px}input:focus-visible{outline:none}
+.tools{display:flex;gap:16px;margin-top:10px;font-size:13px;color:var(--dim);flex-wrap:wrap}.tools button{background:none;border:0;padding:0;color:var(--mut);text-decoration:underline;text-underline-offset:3px}.tools button:hover{color:var(--txt)}
+#dashsum{margin-left:auto}
+.views{margin-left:8px}
+@media(max-width:620px){.quick{flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;scrollbar-width:none}.quick button{flex:none}.orb canvas{width:200px;height:200px}.talk{padding:0 12px}#dashsum{display:none}}
+#breath{position:fixed;inset:0;z-index:60;background:rgba(12,16,21,.97);display:none;place-items:center}
+#breath.on{display:grid}#breath>div{display:flex;flex-direction:column;align-items:center;padding:0 20px}#breath .o{width:220px;height:220px;border-radius:50%;border:2px solid var(--txt);display:grid;place-items:center;transition:transform 4s ease-in-out}
 #breath b{font-size:22px;font-weight:600}#breath p{text-align:center;color:var(--mut);margin-top:24px}
 @media (prefers-reduced-motion:reduce){#breath .o{transition:none}}
 footer{color:var(--dim);font-size:13px;padding:18px 24px 28px;max-width:1500px;margin:0 auto}
 </style></head><body>
 <header>
   <div><h1>SELENE</h1><small>Crew health monitor for a lunar habitat (demo)</small></div>
+  <div class="crewbar views" role="tablist" aria-label="View"><button class="pill on" id="vTalk" role="tab" aria-selected="true">Talk</button><button class="pill" id="vDash" role="tab" aria-selected="false">Dashboard</button></div>
   <div class="crewbar" id="crewbar" role="group" aria-label="Crew member"></div>
   <nav><a href="https://jaigod.github.io/LunarSmartAdaptiveHabitat/">Mission Control</a><a href="https://github.com/JaiGod/lunar-crew-monitor">Source code</a><a href="https://github.com/JaiGod/lunar-crew-monitor/releases/latest">Desktop app</a></nav>
 </header>
-<div class="grid">
-  <section class="card ai" aria-label="Talk to SELENE">
-    <div class="logo"><canvas id="logo" width="176" height="176" role="img" aria-label="SELENE logo: a Moon made of particles"></canvas><div><b>SELENE<span id="lstate">idle</span></b><div class="mode">Rules run in your browser. Nothing is sent to a server.</div></div></div>
-    <div class="log" id="log" aria-live="polite"></div>
-    <div class="compose">
-      <div class="quick" id="quick"></div>
-      <form id="f"><input id="in" placeholder="Ask SELENE something" aria-label="Message SELENE" autocomplete="off"><button class="btn ghost" type="button" id="talk">Speak</button><button class="btn" type="submit">Send</button></form>
-      <div class="tools"><button type="button" id="wake">Wake word: off</button><button type="button" id="mute">Voice: on</button><button type="button" id="music">Music</button></div>
-    </div>
-  </section>
+<main class="talk" id="talkView">
+  <div class="orb"><canvas id="logo" width="560" height="560" role="img" aria-label="SELENE, a Moon made of particles"></canvas>
+    <div class="who"><b>SELENE</b><span id="lstate">idle</span></div>
+    <p class="mode">Crew health assistant for a lunar habitat. Rules run in your browser; nothing is sent to a server.</p></div>
+  <div class="log" id="log" aria-live="polite"></div>
+  <div class="compose">
+    <div class="quick" id="quick"></div>
+    <form id="f"><input id="in" placeholder="Message SELENE, or log data: &quot;I drank 500 ml&quot;, &quot;slept 6 hours&quot;, &quot;30 minutes on the bike&quot;" aria-label="Message SELENE" autocomplete="off"><button class="btn ghost" type="button" id="talk">Speak</button><button class="btn" type="submit">Send</button></form>
+    <div class="tools"><button type="button" id="wake">Wake word: off</button><button type="button" id="mute">Voice: on</button><button type="button" id="music">Music</button><span id="dashsum"></span></div>
+  </div>
+</main>
+<div class="grid" id="dashView" hidden>
   <div class="right">
     <section class="card span2"><h3>Vitals <small>simulated demo data</small><span class="st" id="pstat">—</span></h3>
       <div class="monitor"><div class="hr"><small>HR bpm</small><b id="vhr">—</b></div><canvas class="hrc" id="hrc" width="1000" height="192"></canvas>
@@ -215,12 +227,13 @@ function reply(text){ const t=text.toLowerCase().trim(); let m;
 function stability(){ const v={happy:9,calm:8,tired:5,anxious:3,sad:2,lonely:3}; const xs=S.moods.slice(-10).map(m=>v[m]); const mu=xs.reduce((a,b)=>a+b,0)/xs.length; const sd=Math.sqrt(xs.reduce((a,b)=>a+(b-mu)**2,0)/xs.length); return Math.round(Math.max(0,100-sd*22)); }
 // ---------------------------------------------------------------- chat UI + voice
 const log=$('#log');
-function add(cls,t,fb){ const d=document.createElement('div'); d.className='m '+cls; d.textContent=t; if(fb&&lastMood){ const lm={...lastMood}; const f=document.createElement('div'); f.className='fb'; f.innerHTML='<button>Helpful</button><button>Not helpful</button>'; f.children[0].onclick=()=>{rate(lm.mood,lm.a,1);f.textContent='Thanks, I\'ll remember that works for you.';}; f.children[1].onclick=()=>{rate(lm.mood,lm.a,0);f.textContent='Got it, I\'ll try something different next time.';}; d.appendChild(f);} log.appendChild(d); log.scrollTop=log.scrollHeight; }
+function add(cls,t,fb){ const d=document.createElement('div'); d.className='m '+cls; d.textContent=t; if(fb&&lastMood){ const lm={...lastMood}; const f=document.createElement('div'); f.className='fb'; f.innerHTML='<button>Helpful</button><button>Not helpful</button>'; f.children[0].onclick=()=>{rate(lm.mood,lm.a,1);f.textContent='Thanks, I\'ll remember that works for you.';}; f.children[1].onclick=()=>{rate(lm.mood,lm.a,0);f.textContent='Got it, I\'ll try something different next time.';}; d.appendChild(f);} log.appendChild(d); afterAdd(cls); }
+function afterAdd(cls){ if(cls==='u') $('#talkView').classList.add('chatting'); if(!$('#talkView').classList.contains('chatting')) return; requestAnimationFrame(()=>window.scrollTo({top:document.body.scrollHeight,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'})); }
 let state='idle'; const setState=s=>{state=s; $('#lstate').textContent=s;};
 function say(t){ add('s',t,/Was that helpful\?$/.test(t)); if(!S.voice||!('speechSynthesis' in window)){ setState('idle'); return; } const u=new SpeechSynthesisUtterance(t.replace(/°C/g,' degrees').replace(/µSv/g,'micro sieverts').replace(/mSv/g,'milli sieverts')); const v=speechSynthesis.getVoices().find(v=>/female|zira|samantha|aria|jenny|libby/i.test(v.name)); if(v) u.voice=v; u.rate=1.02; u.onstart=()=>setState('speaking'); u.onend=()=>setState('idle'); u.onerror=()=>setState('idle'); speechSynthesis.speak(u); setTimeout(()=>{ if(state==='thinking') setState('idle'); },2500); }
 function ask(t){ if(!t.trim()) return; add('u',t); setState('thinking'); setTimeout(()=>say(reply(t)),420); }
 $('#f').onsubmit=e=>{e.preventDefault(); ask($('#in').value); $('#in').value='';};
-['How am I doing?','I feel anxious','Log 45 minutes of resistive exercise','Start a breathing exercise','What can you do?'].forEach(q=>{ const b=document.createElement('button'); b.type='button'; b.textContent=q; b.onclick=()=>ask(q); $('#quick').appendChild(b); });
+['How am I doing?','I drank 500 ml of water','Log 45 minutes of resistive exercise','I feel anxious','Start a breathing exercise','What can you do?'].forEach(q=>{ const b=document.createElement('button'); b.type='button'; b.textContent=q; b.onclick=()=>ask(q); $('#quick').appendChild(b); });
 $('#mute').onclick=()=>{ S.voice=!S.voice; $('#mute').textContent='Voice: '+(S.voice?'on':'off'); if(!S.voice) speechSynthesis.cancel(); };
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition; let rec=null, wakeOn=false;
 function listen(once=true){ if(!SR){ say('Voice input needs Chrome or Edge. You can still type to me.'); return; } rec=new SR(); rec.lang='en-US'; rec.continuous=!once; rec.interimResults=false; setState('listening');
@@ -272,7 +285,12 @@ function finish(a,el){ stopCam(); const n=Math.max(1,a.n), bpm=a.blinks/el*60; c
   say(`Check-in done. ${S.checkin[S.aid].raw} That gives fatigue ${fat}, stress ${str}, low mood ${low}: overall ${st.toLowerCase()}. These scores use fixed, uncalibrated weights, so treat them as a weak hint, not a diagnosis. ${st==='GREEN'?"You're looking well today.":'A short break and some water might help. Want a breathing exercise?'}`); }
 function simulateCheckin(){ const d=cur(); S.checkin[S.aid]={raw:'No camera: estimated from HRV and self-reported mood and stress.'}; const st=score(Math.round(100-d.hrv_ms),Math.round(d.stress*9),Math.round((10-d.mood)*9)); say(`Using sensor data: overall ${st.toLowerCase()}.`); }
 $('#checkin').onclick=checkin;
-$('#mood').onclick=()=>{ const d=document.createElement('div'); d.className='m s'; d.textContent='How do you feel right now?'; const f=document.createElement('div'); f.className='fb'; ['happy','calm','tired','anxious','sad','lonely'].forEach(m=>{ const x=document.createElement('button'); x.textContent=m; x.onclick=()=>{ f.remove(); ask('I feel '+m); }; f.appendChild(x); }); d.appendChild(f); log.appendChild(d); log.scrollTop=log.scrollHeight; };
+$('#mood').onclick=()=>{ const d=document.createElement('div'); d.className='m s'; d.textContent='How do you feel right now?'; const f=document.createElement('div'); f.className='fb'; ['happy','calm','tired','anxious','sad','lonely'].forEach(m=>{ const x=document.createElement('button'); x.textContent=m; x.onclick=()=>{ f.remove(); ask('I feel '+m); }; f.appendChild(x); }); d.appendChild(f); showView('talk'); log.appendChild(d); afterAdd('s'); };
+// ---------------------------------------------------------------- views
+function showView(v){ const talk=v==='talk'; $('#talkView').hidden=!talk; $('#dashView').hidden=talk;
+  $('#vTalk').classList.toggle('on',talk); $('#vDash').classList.toggle('on',!talk); $('#vTalk').setAttribute('aria-selected',talk); $('#vDash').setAttribute('aria-selected',!talk);
+  if(talk) $('#in').focus({preventScroll:true}); else window.scrollTo(0,0); }
+$('#vTalk').onclick=()=>showView('talk'); $('#vDash').onclick=()=>showView('dash');
 // ---------------------------------------------------------------- render
 function bar(label,v,max,color,txt){ return `<div class="row"><span>${label}</span><div class="track"><i style="width:${Math.min(100,v/max*100)}%;background:${color}"></i></div><span>${txt}</span></div>`; }
 const SL={GREEN:'Normal',YELLOW:'Caution',ORANGE:'Caution',RED:'Warning'};
@@ -293,6 +311,7 @@ function render(){ const p=phys(), d=p.d, b=brain(), e=exterior();
   $('#stab').innerHTML=bar('Balance',d.balance_score,100,'var(--fill)',d.balance_score+' / 100')+(S.moods.length>1?bar('Mood stability',stability(),100,'var(--fill)',stability()+' / 100'):'');
   const SEV={RED:'Warning',ORANGE:'Caution',YELLOW:'Caution'};
   const al=[...S.alerts.map(a=>`<div class="al ${a.sev}"><b>${SEV[a.sev]||a.sev}</b><span>${esc(a.reason)}</span><time>${a.t}</time></div>`),...p.flags.map(([s,t])=>`<div class="al ${s}"><b>${SEV[s]}</b><span>${esc(t)}</span><time></time></div>`),...S.sched.map(s=>`<div class="al INFO"><b>Scheduled</b><span>${esc(s.what)}</span><time>${esc(s.when)}</time></div>`)];
+  const nAl=S.alerts.length+p.flags.length; $('#dashsum').innerHTML=`${S.aid}: ${SL[p.status].toLowerCase()}${nAl?`, ${nAl} alert${nAl>1?'s':''}`:''}. <button type="button" id="openDash">Open dashboard</button>`; $('#openDash').onclick=()=>showView('dash');
   $('#alerts').innerHTML=al.join('')||'<div class="al INFO"><b>Clear</b><span>No alerts.</span><time></time></div>';
   $('#crew').innerHTML='<tr><th>Crew member</th><th>Status</th><th class="n">HR</th><th class="n hide-s">HRV</th><th class="n hide-s">Sleep</th><th class="n">Mood</th></tr>'+Object.keys(DATA).map(k=>{ const a=S.aid; S.aid=k; const s=phys().status, dd=cur(); S.aid=a; return `<tr class="${k===S.aid?'on':''}"><td>${k}</td><td><span class="st s${s}" style="margin:0">${SL[s]}</span></td><td class="n">${dd.heart_rate}</td><td class="n hide-s">${dd.hrv_ms} ms</td><td class="n hide-s">${dd.sleep_h} h</td><td class="n">${dd.mood}/10</td></tr>`; }).join('');
 }
@@ -312,7 +331,7 @@ function frame(ts){ const t=ts/1000, hist=DATA[S.aid].hr; const W=hrc.width, H=h
 // ---------------------------------------------------------------- SELENE logo: a Moon made of particles
 // ~450 points on a sphere (Fibonacci spiral), lit from one side so it reads as a crescent. Motion shows state:
 // idle = slow drift, listening = ripples, thinking = bands swirl, speaking = surface pulses with the voice.
-const PN=450, PTS=[], GA=Math.PI*(3-Math.sqrt(5));
+const PN=760, PTS=[], GA=Math.PI*(3-Math.sqrt(5));
 for(let i=0;i<PN;i++){ const y=1-2*(i+0.5)/PN, r=Math.sqrt(1-y*y), a=i*GA; PTS.push([Math.cos(a)*r,y,Math.sin(a)*r,Math.random()*6.28]); }
 const LCOL={idle:[214,222,232],listening:[60,200,240],thinking:[90,169,214],speaking:[236,240,245]};
 let lcol=[214,222,232], spin=0, lastT=0, energy=0;
@@ -331,7 +350,7 @@ function drawLogo(t){ const W=lc.width, H=lc.height, cx=W/2, cy=H/2, R=W*0.41, d
     if(state==='speaking') d+=0.12*energy*voice*(0.6+0.4*Math.sin(ph*3+t*9));   // pulses with speech
     if(z<-0.15) continue;                                                       // back side hidden
     // light in view space, so the crescent stays put while the particles flow through it, like the real Moon
-    const lit=Math.max(0,Math.min(1,(x*L[0]+y*L[1]+z*L[2])*1.4+0.1)), a=0.07+0.93*Math.pow(lit,0.8), size=(W/72)*(0.6+0.4*(z+0.15)/1.15)*(0.75+0.45*lit);
+    const lit=Math.max(0,Math.min(1,(x*L[0]+y*L[1]+z*L[2])*1.4+0.1)), a=0.07+0.93*Math.pow(lit,0.8), size=(W/80)*(0.6+0.4*(z+0.15)/1.15)*(0.75+0.45*lit);
     lg.fillStyle=`rgba(${lcol[0]|0},${lcol[1]|0},${lcol[2]|0},${a.toFixed(3)})`;
     lg.fillRect(cx+x*R*d-size/2, cy-y*R*d-size/2, size, size); } }
 
