@@ -68,6 +68,7 @@ form{display:flex;gap:6px}input{flex:1;background:rgba(6,8,24,.8);border:1px sol
 #breath{position:fixed;inset:0;z-index:60;background:rgba(4,6,18,.86);display:none;place-items:center;backdrop-filter:blur(6px)}
 #breath.on{display:grid}#breath .o{width:240px;height:240px;border-radius:50%;background:radial-gradient(circle,rgba(123,97,255,.55),rgba(61,220,255,.15) 60%,transparent 70%);display:grid;place-items:center;transition:transform 4s ease-in-out;box-shadow:0 0 80px rgba(123,97,255,.5)}
 #breath b{font:800 26px Orbitron}#breath p{text-align:center;color:var(--mut);margin-top:18px}
+@media (prefers-reduced-motion:reduce){#breath .o{transition:none}}
 footer{text-align:center;color:var(--mut);font-size:12.5px;padding:20px;border-top:1px solid var(--line);background:rgba(6,8,24,.6)}
 .note{font-size:12px;color:var(--mut);margin-top:8px}
 </style></head><body>
@@ -78,14 +79,14 @@ footer{text-align:center;color:var(--mut);font-size:12.5px;padding:20px;border-t
 </header>
 <div class="grid">
   <section class="card ai">
-    <div class="logo"><canvas id="logo" width="192" height="192"></canvas><div><b>SELENE</b><span id="lstate">IDLE</span><div class="mode">OFFLINE AI · ON DEVICE</div></div></div>
+    <div class="logo"><canvas id="logo" width="192" height="192"></canvas><div><b>SELENE</b><span id="lstate">IDLE</span><div class="mode">NO SERVER · RUNS IN YOUR BROWSER</div></div></div>
     <div class="log" id="log"></div>
     <div class="quick" id="quick"></div>
     <form id="f"><input id="in" placeholder="Ask SELENE…  (try: how am I doing?)" autocomplete="off"><button class="btn ghost" type="button" id="talk">🎙 Talk</button><button class="btn" type="submit">Send</button></form>
     <div class="quick" style="margin:8px 0 0"><button type="button" id="wake">👂 "Hey Selene" off</button><button type="button" id="mute">🔊 Voice on</button><button type="button" id="music">🎵 Space music</button></div>
   </section>
   <div class="right">
-    <section class="card span2"><h3>❤ Physical health <span class="st" id="pstat">—</span></h3>
+    <section class="card span2"><h3>❤ Physical health <span style="color:var(--mut);letter-spacing:.08em">· simulated demo crew</span><span class="st" id="pstat">—</span></h3>
       <div class="vit" id="vit"></div><canvas class="hrc" id="hrc" width="900" height="140"></canvas>
       <div class="bars" id="bars"></div></section>
     <section class="card"><h3>🧠 Brainwaves <span class="st sGREEN" id="bstate">—</span></h3><div class="eeg" id="eeg"></div>
@@ -104,14 +105,20 @@ footer{text-align:center;color:var(--mut);font-size:12.5px;padding:20px;border-t
     <section class="card span2"><h3>👩‍🚀 Crew</h3><div class="kv" id="crew" style="grid-template-columns:repeat(4,1fr)"></div></section>
   </div>
 </div>
-<div id="breath"><div><div class="o" id="borb"><b id="bt">Breathe in</b></div><p id="bp">4-7-8 breathing · round 1 of 4 · click to stop</p></div></div>
+<div id="breath"><div><div class="o" id="borb"><b id="bt">Breathe in</b></div><p id="bp">4-7-8 breathing · round 1 of 4 · click or press Esc to stop</p></div></div>
 <footer>SELENE Web · Space Environment Life &amp; Neuro-health Engine · NASA HUNCH Project ARES · © 2026 Jaineil R. · with Angel C. and Farhan K. · Research and education prototype, not a medical device.</footer>
 <script type="module">
 const $=s=>document.querySelector(s), esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const DATA=await (await fetch('web/demo_crew.json')).json();
-const S={aid:'Commander', light:'focus', temp:22, sound:null, paused:false, voice:true, log:{}, alerts:[], sched:[{what:'Crew meeting',when:'14:00'},{what:'Private family video call',when:'next comm window (19:30)'}], learn:JSON.parse(localStorage.getItem('selene-learn')||'{}'), moods:[], checkin:{}};
-const LIGHT={day:[6500,90,'Day (6500 K) - alertness'],focus:[5000,80,'Focus (5000 K) - work and science'],relax:[3000,55,'Relax (3000 K) - calming'],evening:[2700,40,'Evening (2700 K) - wind down'],night:[1900,15,'Night (1900 K) - protects melatonin'],sleep:[0,0,'Sleep - lights off']};
-const TINT={day:'rgba(180,210,255,.10)',focus:'rgba(200,220,255,.06)',relax:'rgba(255,170,90,.16)',evening:'rgba(255,140,60,.2)',night:'rgba(255,100,30,.28)',sleep:'rgba(0,0,0,.45)'};
+let DATA; try{ const r=await fetch('web/demo_crew.json'); if(!r.ok) throw new Error('HTTP '+r.status); DATA=await r.json(); }catch(e){ document.querySelector('.grid').innerHTML=`<div class="card span2"><h3>Crew data didn't load</h3><p>${String(e.message||e).replace(/</g,'&lt;')}. Reload the page. If you opened this file directly from disk, run it from a web server or use the hosted site.</p></div>`; throw e; }
+const S={aid:'Commander', light:'general', temp:22, sound:null, paused:false, voice:true, log:{}, alerts:[], sched:[{what:'Crew meeting',when:'14:00'},{what:'Private family video call',when:'next comm window (19:30)'}], learn:(()=>{try{return JSON.parse(localStorage.getItem('selene-learn')||'{}')}catch(e){return {}}})(), moods:[], checkin:{}};
+// Modes follow the ISS Solid State Lighting Assembly (NASA JSC, Maida 2016): phase-shift 6500 K, general 4500 K, pre-sleep 2700 K.
+// Night (1900 K, ~5 lux) is our addition for moving around during the sleep period without suppressing melatonin.
+const LIGHT={shift:[6500,'Phase-shift (6500 K, blue-rich) - wake up or shift your sleep'],general:[4500,'General (4500 K) - default for work'],presleep:[2700,'Pre-sleep (2700 K, blue-depleted) - wind down'],night:[1900,'Night (1900 K, dim) - moving around during sleep hours'],sleep:[0,'Sleep - lights off']};
+const LALIAS={shift:'shift',day:'shift',wake:'shift',bright:'shift',general:'general',focus:'general',work:'general',normal:'general',presleep:'presleep','pre-sleep':'presleep',relax:'presleep',evening:'presleep',warm:'presleep',night:'night',dim:'night',sleep:'sleep'};
+const TINT={shift:'rgba(180,210,255,.10)',general:'rgba(200,220,255,.05)',presleep:'rgba(255,150,70,.18)',night:'rgba(255,100,30,.28)',sleep:'rgba(0,0,0,.45)'};
+// Cabin limits: NASA-STD-3001 Vol 2 [V2 6004] 1-hour average ppCO2 <= 3 mmHg; headache risk rises above ~2.5 mmHg (OCHMO-TB-004).
+// [V2 6006] total pressure 34.5-103 kPa for indefinite exposure.
+const CO2_LIMIT=3.0, CO2_WATCH=2.5;
 const SOUNDS=['ocean waves','rain','earth forest','white noise'];
 const TRACKS=['Lunar Drift','Earthrise','Solar Wind','Deep Field'];
 const JOKES=["Why did the astronaut break up with the Moon? It needed space, and the Moon kept going through phases.","What's an astronaut's favorite key on the keyboard? The space bar.","How do you throw a party on the Moon? You planet.","What do you call a tick on the Moon? A luna-tick.","Why did the Sun skip college? It already had a million degrees.","What kind of music do planets sing? Nep-tunes.","I tried squats in one-sixth gravity. My legs said thanks. My coffee said goodbye.","Why is the habitat gym never crowded? Everyone feels light about skipping it. Please don't, your bones are watching.","Mission Control said to watch my heart rate. Up here it's the only thing that doesn't float away.","Why did the water recycler get promoted? It always turned things around.","What did the Moon say to the astronaut who forgot to drink water? You're going through a dry phase.","How does the Moon get its hair cut? E-clipse it."];
@@ -124,13 +131,15 @@ const fmt=(v,u='',d=0)=>v==null||isNaN(v)?'—':(+v).toFixed(d)+u;
 // ---------------------------------------------------------------- learning (Thompson sampling, like learning.py)
 function beta(a,b){ const g=k=>{let x=0;for(let i=0;i<k;i++)x-=Math.log(Math.random());return x}; const x=g(Math.max(1,Math.round(a))),y=g(Math.max(1,Math.round(b))); return x/(x+y); }
 function choose(mood){ const st=(S.learn[S.aid]||{})[mood]||{}; let best=null,bv=-1; for(const a of CANDS[mood]){ const [n,s]=st[a]||[0,0]; const v=beta(1+s,1+n-s); if(v>bv){bv=v;best=a;} } return best; }
-function rate(mood,a,ok){ const u=(S.learn[S.aid]=S.learn[S.aid]||{}); const m=(u[mood]=u[mood]||{}); const [n,s]=m[a]||[0,0]; m[a]=[n+1,s+(ok?1:0)]; localStorage.setItem('selene-learn',JSON.stringify(S.learn)); }
+function rate(mood,a,ok){ const u=(S.learn[S.aid]=S.learn[S.aid]||{}); const m=(u[mood]=u[mood]||{}); const [n,s]=m[a]||[0,0]; m[a]=[n+1,s+(ok?1:0)]; try{localStorage.setItem('selene-learn',JSON.stringify(S.learn))}catch(e){} }
 // ---------------------------------------------------------------- physical summary + flags
 function phys(){ const d=cur(), l=L(); const ex=(d.exercise_min||0)+l.ex, res=(d.resistive_min||0)+l.res, water=(d.water_ml||0)+l.water, sleep=l.sleep??d.sleep_h; const flags=[];
   if(d.hrv_ms<35) flags.push(['ORANGE',`Heart-rate variability low (${d.hrv_ms} ms): poor recovery or high stress.`]);
   if(sleep<6) flags.push(['YELLOW',`Short sleep (${sleep} h). Aim for 8 hours.`]);
   if(ex<60&&new Date().getHours()>15) flags.push(['YELLOW','Exercise is well below today\'s countermeasure target.']);
   if(d.spo2<95) flags.push(['RED',`Blood oxygen ${d.spo2}%.`]);
+  if(d.ppco2_mmhg>CO2_LIMIT) flags.push(['RED',`Cabin CO₂ ${d.ppco2_mmhg} mmHg is over NASA's 3 mmHg limit. Check the CO₂ scrubber.`]); else if(d.ppco2_mmhg>CO2_WATCH) flags.push(['YELLOW',`Cabin CO₂ ${d.ppco2_mmhg} mmHg: headache risk rises above 2.5 mmHg.`]);
+  if(d.pressure_kpa<34.5||d.pressure_kpa>103) flags.push(['RED',`Cabin pressure ${d.pressure_kpa} kPa is outside the 34.5-103 kPa safe range.`]);
   const status=flags.some(f=>f[0]==='RED')?'RED':flags.some(f=>f[0]==='ORANGE')?'ORANGE':flags.length?'YELLOW':'GREEN';
   return {d,ex,res,water,sleep,flags,status}; }
 function brain(){ const d=cur(); const sh={delta:d.eeg_delta,theta:d.eeg_theta,alpha:d.eeg_alpha,beta:d.eeg_beta,gamma:d.eeg_gamma};
@@ -143,19 +152,19 @@ let lastMood=null;
 function summary(){ const p=phys(), m=S.checkin[S.aid]; return `Heart rate ${fmt(p.d.heart_rate,' bpm')}, oxygen ${fmt(p.d.spo2,'%')}, HRV ${fmt(p.d.hrv_ms,' ms')}. Exercise ${fmt(p.ex,' of 120 minutes')}, water ${fmt(p.water,' ml')}, sleep ${fmt(p.sleep,' hours',1)}. `+(m?`Mental wellbeing: ${m.status.toLowerCase()}.`:'No wellbeing check-in yet today.')+(p.flags.length?' Heads up: '+p.flags[0][1]:''); }
 function moodReply(mood){ S.moods.push(mood); const a=choose(mood); lastMood={mood,a};
   const open={happy:'Love hearing that!',calm:'Nice, calm is a great place to be.',tired:'Thanks for telling me.',anxious:"I hear you. Let's bring it down a notch.",sad:"I'm sorry it's a heavy day.",lonely:"That's a really normal feeling this far from home."}[mood];
-  const act={celebrate:'Want me to log that win in your mission journal?',joke:'Here\'s one for you: '+JOKES[Math.random()*JOKES.length|0],light_relax:(setLight('relax'),"I've switched to warm relax lighting."),light_day:"I've brightened the lights to help you feel more alert.",nap_window:"I've reserved a 20-minute rest in your next schedule gap.",breathing:"Let's do a short 4-7-8 breathing exercise together.",ocean_relax:"I've set warm lighting and ocean waves.",family_call:"I've booked a private family video call in the next comm window.",crew_activity:"I've suggested a crew movie night this evening.",earth_view_music:"Here's Earthrise music, with the Earth view on the virtual window.",talk:'Do you want to tell me what\'s on your mind?',none:"I'm here if you need anything."};
-  if(a==='light_day') setLight('day'); if(a==='ocean_relax'){setLight('relax');sound('ocean waves');} if(a==='breathing') setTimeout(breathe,900); if(a==='family_call'||a==='crew_activity') S.sched.push({what:a==='family_call'?'Private family video call':'Crew movie night',when:'next comm window'});
+  const act={celebrate:'Want me to log that win in your mission journal?',joke:'Here\'s one for you: '+JOKES[Math.random()*JOKES.length|0],light_relax:(setLight('presleep'),"I've switched to warm pre-sleep lighting (2700 K)."),light_day:"I've switched to phase-shift lighting (6500 K), the blue-rich light that helps you feel alert.",nap_window:"I've reserved a 20-minute rest in your next schedule gap.",breathing:"Let's do a short 4-7-8 breathing exercise together.",ocean_relax:"I've set warm pre-sleep lighting and ocean waves.",family_call:"I've booked a private family video call in the next comm window.",crew_activity:"I've suggested a crew movie night this evening.",earth_view_music:"Here's Earthrise music, with the Earth view on the virtual window.",talk:'Do you want to tell me what\'s on your mind?',none:"I'm here if you need anything."};
+  if(a==='light_day') setLight('shift'); if(a==='ocean_relax'){setLight('presleep');sound('ocean waves');} if(a==='breathing') setTimeout(breathe,900); if(a==='family_call'||a==='crew_activity') S.sched.push({what:a==='family_call'?'Private family video call':'Crew movie night',when:'next comm window'});
   if(a==='nap_window') S.sched.push({what:'20-minute rest',when:'next schedule gap'});
   let text=a.startsWith('music_')?(playMusic(a.slice(6).replace('_',' ')),`I've put on ${a.slice(6).replace('_',' ').replace(/\b\w/g,c=>c.toUpperCase())}, some space music I think you'll like.`):act[a]||'';
   if(a==='earth_view_music') playMusic('earthrise');
   render(); return `${open} ${text} Was that helpful?`; }
 function reply(text){ const t=text.toLowerCase().trim(); let m;
-  if(CRISIS.test(t)){ alert('RED','Crew member reports thoughts of self-harm: flight psychologist and commander notified'); return "I'm really glad you told me. You're not alone up here. I've quietly alerted the flight psychologist and your commander so a real person can talk with you right now. Would you like me to stay with you and do some slow breathing while they connect?"; }
-  if(EMERG.test(t)){ alert('RED','EMERGENCY: '+text.slice(0,100)); return "Emergency alert raised. The commander and flight surgeon are notified. Stay where you are and tell me what's happening."; }
+  if(CRISIS.test(t)){ alert('RED','Self-harm words detected. In the habitat build this pages the flight psychologist. This web demo contacts no one.'); return "I'm really glad you told me. In the real habitat, this message would go straight to the flight psychologist. This web page is a demo and can't reach anyone, so please talk to a real person now: in the US, call or text 988 (Suicide and Crisis Lifeline), or call 911 if you're in danger. Outside the US, findahelpline.com lists a free line for your country. Would you like to do some slow breathing while you reach out?"; }
+  if(EMERG.test(t)){ alert('RED','EMERGENCY (simulated): '+text.slice(0,100)); return "Simulated emergency alert raised. In the habitat this pages the commander and flight surgeon. This demo contacts no one: if this is a real emergency on Earth, call your local emergency number (911 in the US) now."; }
   if((m=t.match(/(\d+(?:\.\d+)?)\s*(?:min|minutes?)\b/))&&/exercis|work ?out|train|run|bike|cycl|lift|resist|weights|treadmill|squat|cardio/.test(t)){ const kind=/resist|weight|strength|squat|lift|ared/.test(t)?'resistive':'aerobic'; const n=+m[1]; L().ex+=n; if(kind==='resistive') L().res+=n; render(); const p=phys(), left=Math.max(0,120-p.ex);
     return `Logged ${n} minutes of ${kind} exercise. Today's total is ${p.ex.toFixed(0)} minutes`+(left?`, ${left.toFixed(0)} to go to reach your 2-hour countermeasure goal.`:". You've hit today's countermeasure goal, great work!"); }
   if((m=t.match(/(\d+(?:\.\d+)?)\s*(ml|millilit|l\b|lit|litre|liter|cups?|glass(?:es)?)/))&&/drank|drink|water|hydrat|glass|cup/.test(t)){ const n=+m[1],u=m[2]; const ml=/^l|^lit/.test(u)?n*1000:/^cup|^glass/.test(u)?n*250:n; L().water+=ml; render(); return `Logged ${ml.toFixed(0)} ml. You're at ${phys().water.toFixed(0)} of 2500 ml today.`; }
-  if((m=t.match(/slept\s*(?:for\s*)?(\d+(?:\.\d+)?)|(\d+(?:\.\d+)?)\s*h(?:ours?|rs?)?\s*(?:of\s*)?sleep/))){ const h=+(m[1]||m[2]); L().sleep=h; if(h<6) setLight('day'); render(); return `Logged ${h} hours of sleep.`+(h<6?" That's short. I'll keep the lights bright this morning and suggest a nap window later.":''); }
+  if((m=t.match(/slept\s*(?:for\s*)?(\d+(?:\.\d+)?)|(\d+(?:\.\d+)?)\s*h(?:ours?|rs?)?\s*(?:of\s*)?sleep/))){ const h=+(m[1]||m[2]); L().sleep=h; if(h<6) setLight('shift'); render(); return `Logged ${h} hours of sleep.`+(h<6?" That's short. I'll keep the lights bright this morning and suggest a nap window later.":''); }
   if(/joke|make me laugh|funny|cheer me up/.test(t)) return JOKES[Math.random()*JOKES.length|0];
   if(/(next|skip) (track|song)/.test(t)) return `Now playing ${playMusic('next')}.`;
   if(/stop (the )?(music|sound|audio)|silence|\bquiet\b/.test(t)){ stopAudio(); return 'Music stopped.'; }
@@ -166,12 +175,12 @@ function reply(text){ const t=text.toLowerCase().trim(); let m;
   if(/what have you learned|learned|preferences/.test(t)){ const u=S.learn[S.aid]; if(!u) return "I'm still learning. Tap Helpful or Not helpful after my suggestions and I'll adapt to you."; return "Here's what works for you: "+Object.entries(u).map(([mood,acts])=>{ const best=Object.entries(acts).sort((a,b)=>(b[1][1]+1)/(b[1][0]+2)-(a[1][1]+1)/(a[1][0]+2))[0]; return `when ${mood}, ${best[0].replace(/_/g,' ')}`; }).join('; ')+'.'; }
   if(/check[- ]?in|scan me|assess me|wellbeing check/.test(t)){ if(S.paused) return "Monitoring is paused, so I can't run a check-in. Say 'resume monitoring' first."; setTimeout(checkin,600); return 'Starting your check-in. Face the camera and stay relaxed for 30 seconds.'; }
   if(/breath|calm me|panic|relax me/.test(t)){ setTimeout(breathe,700); return "Let's breathe together. Breathe in through your nose for 4, hold for 7, and out slowly for 8. We'll do four rounds."; }
-  for(const k of Object.keys(LIGHT)) if(new RegExp('\\b'+k+'\\b').test(t)&&/light|mode|lamp/.test(t)){ setLight(k); return `Lighting set to ${LIGHT[k][2]}.`; }
+  if(/light|mode|lamp/.test(t)){ const w=Object.keys(LALIAS).find(k=>new RegExp('\\b'+k+'\\b').test(t)); if(w){ setLight(LALIAS[w]); return `Lighting set to ${LIGHT[LALIAS[w]][1]}.`; } }
   if(/lights? (off|out)/.test(t)){ setLight('sleep'); return 'Lights off. Sleep well.'; }
   if((m=t.match(/(?:temperature|temp|warmer|cooler|degrees).*?(\d{2}(?:\.\d)?)|(\d{2}(?:\.\d)?)\s*degrees/))){ S.temp=Math.min(26,Math.max(18,+(m[1]||m[2]))); render(); return `Cabin temperature set to ${S.temp.toFixed(1)} °C.`; }
   if(/radiation|dose/.test(t)){ const d=cur(); return `Mission dose is ${d.radiation_msv.toFixed(1)} mSv, ${(d.radiation_msv/6).toFixed(1)}% of NASA's 600 mSv career limit; ${d.radiation_today_msv.toFixed(2)} mSv so far today.`; }
   if(/crew|everyone|team/.test(t)) return 'Crew status: '+Object.keys(DATA).map(k=>{ const a=S.aid; S.aid=k; const s=phys().status; S.aid=a; return `${k} physical ${s.toLowerCase()}, mental ${(S.checkin[k]?.status||'no check-in').toLowerCase()}`; }).join('; ')+'.';
-  if(/habitat|cabin|oxygen level|co2|air/.test(t)){ const d=cur(); return `Lighting is ${LIGHT[S.light][2]}, sound ${S.sound||'off'}, ${S.temp} °C. Cabin O2 ${d.o2_pct}%, CO2 ${d.ppco2_mmhg} mmHg.`; }
+  if(/habitat|cabin|oxygen level|co2|air/.test(t)){ const d=cur(); return `Lighting is ${LIGHT[S.light][1]}, sound ${S.sound||'off'}, ${S.temp} °C. Cabin O2 ${d.o2_pct}%, CO2 ${d.ppco2_mmhg} mmHg.`; }
   if(/(call|talk to|video).*(family|home|wife|husband|kids|mom|dad|friend)|family call/.test(t)){ S.sched.push({what:'Private family video call',when:'next communication window'}); render(); return "I've booked a private family video call for the next communication window."; }
   if((m=t.match(/(?:schedule|book|set up)\s+(?:a\s+)?(.+?)(?:\s+(?:for|at|on)\s+(.+))?$/))){ S.sched.push({what:m[1],when:m[2]||'the next free slot'}); render(); return `Scheduled ${m[1]} for ${m[2]||'the next free slot'}.`; }
   if(/pause (the )?monitor|stop monitor|privacy/.test(t)){ S.paused=true; stopCam(); render(); return "Monitoring paused. Nothing is being analyzed until you say 'resume monitoring'."; }
@@ -180,7 +189,7 @@ function reply(text){ const t=text.toLowerCase().trim(); let m;
   if(/heart|pulse|hrv|oxygen|spo2|vital|temperature/.test(t)||/how am i|status|summary|doing|health|report/.test(t)) return summary();
   if(/\b(play|music|song|soundscape)\b/.test(t)){ const s=SOUNDS.find(x=>t.includes(x)||t.includes(x.split(' ')[0])); if(s){ sound(s); return `Playing ${s}. Enjoy the view.`; } return `Playing ${playMusic(TRACKS.find(x=>t.includes(x.toLowerCase()))||'lunar drift')}. Enjoy the view.`; }
   if(/\b(feel|feeling|i'?m|i am|mood)\b/.test(t)){ let mood=Object.keys(MOODW).find(k=>MOODW[k].test(t)); if(/\bnot (so |very |that )?(happy|good|great|fine|calm)/.test(t)) mood='sad'; if(mood) return moodReply(mood); return 'Thanks for telling me. Would a quick wellbeing check-in help?'; }
-  if(/help|what can you|commands/.test(t)) return "You can ask: how am I doing, start my check-in, log 45 minutes of resistive exercise, I drank 500 ml, I slept 6 hours, breathing exercise, set lights to relax, play ocean waves, radiation dose, crew status, outside conditions, what are my brainwaves, schedule a family call, or pause monitoring.";
+  if(/help|what can you|commands/.test(t)) return "You can ask: how am I doing, start my check-in, log 45 minutes of resistive exercise, I drank 500 ml, I slept 6 hours, breathing exercise, set lights to pre-sleep, play ocean waves, radiation dose, crew status, outside conditions, what are my brainwaves, schedule a family call, or pause monitoring.";
   if(/^(hi|hello|hey|good (morning|evening|afternoon))/.test(t)) return `Hello ${S.aid}. How are you feeling today?`;
   return "I didn't catch a command there. Say 'help' to hear what I can do."; }
 function stability(){ const v={happy:9,calm:8,tired:5,anxious:3,sad:2,lonely:3}; const xs=S.moods.slice(-10).map(m=>v[m]); const mu=xs.reduce((a,b)=>a+b,0)/xs.length; const sd=Math.sqrt(xs.reduce((a,b)=>a+(b-mu)**2,0)/xs.length); return Math.round(Math.max(0,100-sd*22)); }
@@ -191,11 +200,12 @@ let state='idle'; const setState=s=>{state=s; $('#lstate').textContent=s.toUpper
 function say(t){ add('s',t,/Was that helpful\?$/.test(t)); if(!S.voice||!('speechSynthesis' in window)){ setState('idle'); return; } const u=new SpeechSynthesisUtterance(t.replace(/°C/g,' degrees').replace(/µSv/g,'micro sieverts').replace(/mSv/g,'milli sieverts')); const v=speechSynthesis.getVoices().find(v=>/female|zira|samantha|aria|jenny|libby/i.test(v.name)); if(v) u.voice=v; u.rate=1.02; u.onstart=()=>setState('speaking'); u.onend=()=>setState('idle'); u.onerror=()=>setState('idle'); speechSynthesis.speak(u); setTimeout(()=>{ if(state==='thinking') setState('idle'); },2500); }
 function ask(t){ if(!t.trim()) return; add('u',t); setState('thinking'); setTimeout(()=>say(reply(t)),420); }
 $('#f').onsubmit=e=>{e.preventDefault(); ask($('#in').value); $('#in').value='';};
-['How am I doing?','Tell me a joke','What are my brainwaves?','I feel anxious','Outside conditions','Crew status','Log 45 minutes of resistive exercise','Start a breathing exercise','Set lights to relax','Help'].forEach(q=>{ const b=document.createElement('button'); b.type='button'; b.textContent=q; b.onclick=()=>ask(q); $('#quick').appendChild(b); });
+['How am I doing?','Tell me a joke','What are my brainwaves?','I feel anxious','Outside conditions','Crew status','Log 45 minutes of resistive exercise','Start a breathing exercise','Set lights to pre-sleep','Help'].forEach(q=>{ const b=document.createElement('button'); b.type='button'; b.textContent=q; b.onclick=()=>ask(q); $('#quick').appendChild(b); });
 $('#mute').onclick=()=>{ S.voice=!S.voice; $('#mute').textContent=S.voice?'🔊 Voice on':'🔇 Voice off'; if(!S.voice) speechSynthesis.cancel(); };
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition; let rec=null, wakeOn=false;
 function listen(once=true){ if(!SR){ say('Voice input needs Chrome or Edge. You can still type to me.'); return; } rec=new SR(); rec.lang='en-US'; rec.continuous=!once; rec.interimResults=false; setState('listening');
   rec.onresult=e=>{ const tx=e.results[e.results.length-1][0].transcript.trim(); if(once) ask(tx); else { const m=tx.toLowerCase().match(/(?:hey|hi|okay|ok)\s+(?:selene|serena|selena|celine)[,\s]*(.*)/); if(m){ if(m[1]) ask(m[1]); else { say('Yes?'); setTimeout(()=>listen(true),900);} } } };
+  rec.onerror=e=>{ if(/not-allowed|service-not-allowed|audio-capture/.test(e.error)){ wakeOn=false; $('#wake').textContent='👂 "Hey Selene" off'; setState('idle'); add('s','I can\'t use the microphone ('+e.error+'). Allow it in your browser\'s site settings, or type to me instead.'); } };
   rec.onend=()=>{ if(!once&&wakeOn) { try{rec.start()}catch(e){} } else if(state==='listening') setState('idle'); }; rec.start(); }
 $('#talk').onclick=()=>listen(true);
 $('#wake').onclick=()=>{ wakeOn=!wakeOn; $('#wake').textContent=wakeOn?'👂 "Hey Selene" on':'👂 "Hey Selene" off'; if(wakeOn) listen(false); else { rec?.stop(); setState('idle'); } };
@@ -217,9 +227,10 @@ $('#music').onclick=()=>S.sound?.startsWith('♪')?(stopAudio(),add('s','Music s
 function setLight(k){ S.light=k; document.documentElement.style.setProperty('--tint',TINT[k]); render(); }
 let bTimer=null;
 function breathe(){ const B=$('#breath'), o=$('#borb'); B.classList.add('on'); let r=1, ph=0; const steps=[['Breathe in',4,1.35],['Hold',7,1.35],['Breathe out',8,0.8]];
-  const go=()=>{ if(!B.classList.contains('on')) return; const [txt,sec,sc]=steps[ph]; $('#bt').textContent=txt; o.style.transitionDuration=sec+'s'; o.style.transform=`scale(${sc})`; $('#bp').textContent=`4-7-8 breathing · round ${r} of 4 · click to stop`;
+  const go=()=>{ if(!B.classList.contains('on')) return; const [txt,sec,sc]=steps[ph]; $('#bt').textContent=txt; o.style.transitionDuration=sec+'s'; o.style.transform=`scale(${sc})`; $('#bp').textContent=`4-7-8 breathing · round ${r} of 4 · click or press Esc to stop`;
     bTimer=setTimeout(()=>{ ph++; if(ph>2){ph=0;r++;} if(r>4){ B.classList.remove('on'); say('Nice work. How do you feel now?'); return;} go(); },sec*1000); }; go(); }
 $('#breath').onclick=()=>{ $('#breath').classList.remove('on'); clearTimeout(bTimer); };
+addEventListener('keydown',e=>{ if(e.key==='Escape'&&$('#breath').classList.contains('on')) $('#breath').click(); });
 function alert(sev,reason){ S.alerts.unshift({sev,reason,t:new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}); add('m alert','⚠ '+sev+' ALERT · '+reason); render(); }
 // ---------------------------------------------------------------- camera check-in (MediaPipe FaceLandmarker blendshapes, on device)
 let lm=null, stream=null, run=false;
@@ -233,12 +244,13 @@ async function checkin(){ if(S.paused){ say('Monitoring is paused.'); return; } 
         g.strokeStyle='#3DDCFF'; g.fillStyle='#3DDCFF'; for(const i of [33,263,61,291,1,152,105,334,10]){ g.beginPath(); g.arc(p[i].x*ov.width,p[i].y*ov.height,3,0,7); g.fill(); } }
       if(el<30) requestAnimationFrame(loop); else finish(acc,el); };
     loop();
-  }catch(err){ say('The camera could not start ('+(err.message||err)+'). I\'ll use your logged mood and the sensor data instead.'); simulateCheckin(); } }
+  }catch(err){ console.warn(err); const m=String(err&&err.name||'')+' '+String(err&&err.message||err); const why=/NotAllowed|Permission/i.test(m)?'camera permission was denied':/NotFound|DevicesNotFound/i.test(m)?'no camera was found':/fetch|import|network|load/i.test(m)?'the face model could not download (check your internet)':'the camera could not start'; stopCam(); say(`I couldn't run the face check-in: ${why}. I'll estimate from HRV and your self-reported mood instead.`); simulateCheckin(); } }
 function stopCam(){ run=false; stream?.getTracks().forEach(t=>t.stop()); $('#camoff').style.display=''; $('#ctime').textContent='ready'; }
-function score(fat,str,low){ const status=Math.max(fat,str,low)>=70?'ORANGE':Math.max(fat,str,low)>=45?'YELLOW':'GREEN'; S.checkin[S.aid]={fatigue:fat,stress:str,low_mood:low,status}; render(); return status; }
+function score(fat,str,low){ const status=Math.max(fat,str,low)>=70?'ORANGE':Math.max(fat,str,low)>=45?'YELLOW':'GREEN'; S.checkin[S.aid]={...(S.checkin[S.aid]||{}),fatigue:fat,stress:str,low_mood:low,status}; render(); return status; }
 function finish(a,el){ stopCam(); const n=Math.max(1,a.n), bpm=a.blinks/el*60; const fat=Math.round(Math.min(100,(a.blink/n)*160+Math.max(0,bpm-18)*2+(a.down/n)*400)), str=Math.round(Math.min(100,(a.brow/n)*180+(cur().stress||0)*4)), low=Math.round(Math.min(100,(a.frown/n)*250+Math.max(0,30-(a.smile/n)*100)));
-  const st=score(fat,str,low); say(`Check-in done. Fatigue ${fat}, stress ${str}, low mood ${low}, overall ${st.toLowerCase()}. ${st==='GREEN'?"You're looking well today.":'I\'d suggest a short break and some water. Want a breathing exercise?'} This is a weak hint, not a diagnosis.`); }
-function simulateCheckin(){ const d=cur(); const st=score(Math.round(100-d.hrv_ms),Math.round(d.stress*9),Math.round((10-d.mood)*9)); say(`Using sensor data: overall ${st.toLowerCase()}.`); }
+  const st=score(fat,str,low); S.checkin[S.aid].raw=`Measured over ${el.toFixed(0)} s, ${a.n} frames: ${bpm.toFixed(0)} blinks/min (typical 15-20), smile ${Math.round(a.smile/n*100)}%, frown ${Math.round(a.frown/n*100)}%, brow tension ${Math.round(a.brow/n*100)}%.`; render();
+  say(`Check-in done. ${S.checkin[S.aid].raw} That gives fatigue ${fat}, stress ${str}, low mood ${low}: overall ${st.toLowerCase()}. These scores use fixed, uncalibrated weights, so treat them as a weak hint, not a diagnosis. ${st==='GREEN'?"You're looking well today.":'A short break and some water might help. Want a breathing exercise?'}`); }
+function simulateCheckin(){ const d=cur(); S.checkin[S.aid]={raw:'No camera: estimated from HRV and self-reported mood and stress.'}; const st=score(Math.round(100-d.hrv_ms),Math.round(d.stress*9),Math.round((10-d.mood)*9)); say(`Using sensor data: overall ${st.toLowerCase()}.`); }
 $('#checkin').onclick=checkin;
 $('#mood').onclick=()=>{ const d=document.createElement('div'); d.className='m s'; d.textContent='How do you feel right now?'; const f=document.createElement('div'); f.className='fb'; ['happy','calm','tired','anxious','sad','lonely'].forEach(m=>{ const x=document.createElement('button'); x.textContent=m; x.onclick=()=>{ f.remove(); ask('I feel '+m); }; f.appendChild(x); }); d.appendChild(f); log.appendChild(d); log.scrollTop=log.scrollHeight; };
 // ---------------------------------------------------------------- render
@@ -249,9 +261,9 @@ function render(){ const p=phys(), d=p.d, b=brain(), e=exterior();
   $('#vit').innerHTML=[[fmt(d.heart_rate),'Heart rate · bpm'],[fmt(d.spo2,'%',1),'Blood oxygen'],[fmt(d.hrv_ms,' ms'),'HRV (recovery)'],[fmt(d.skin_temp_c,' °C',1),'Body temp']].map(([v,l])=>`<div class="v"><b>${v}</b><small>${l}</small></div>`).join('');
   $('#bars').innerHTML=bar('Exercise',p.ex,120,'linear-gradient(90deg,#3DDCFF,#7B61FF)',`${p.ex.toFixed(0)}/120 min`)+bar('Resistive',p.res,60,'linear-gradient(90deg,#7B61FF,#FF5FD2)',`${p.res.toFixed(0)}/60 min`)+bar('Hydration',p.water,2500,'#3DDCFF',`${(p.water/1000).toFixed(1)}/2.5 L`)+bar('Sleep',p.sleep,8,'#7B61FF',`${(+p.sleep).toFixed(1)}/8 h`)+bar('Radiation',d.radiation_msv,600,'#FFC93C',`${d.radiation_msv.toFixed(1)}/600 mSv`);
   $('#eeg').innerHTML=Object.entries(b.sh).map(([k,v])=>`<div><i style="height:${v*230}%;background:${{delta:'#5a6bff',theta:'#7B61FF',alpha:'#3DDC97',beta:'#3DDCFF',gamma:'#FF5FD2'}[k]}"></i><span>${k.toUpperCase()} ${Math.round(v*100)}%</span></div>`).join(''); $('#bstate').textContent=b.st.toUpperCase();
-  const c=S.checkin[S.aid]; $('#mstat').textContent=c?c.status:'NO CHECK-IN'; $('#mstat').className='st '+(c?'s'+c.status:''); $('#mbars').innerHTML=c?bar('Fatigue',c.fatigue,100,'#FFC93C',c.fatigue)+bar('Stress',c.stress,100,'#FF9A3C',c.stress)+bar('Low mood',c.low_mood,100,'#FF5FD2',c.low_mood):bar('Self-report mood',d.mood,10,'#3DDC97',d.mood+'/10')+bar('Self-report stress',d.stress,10,'#FF9A3C',d.stress+'/10');
-  $('#lights').innerHTML=Object.keys(LIGHT).map(k=>`<button class="${k===S.light?'on':''}" data-l="${k}">${k[0].toUpperCase()+k.slice(1)}${LIGHT[k][0]?' · '+LIGHT[k][0]+' K':''}</button>`).join(''); document.querySelectorAll('[data-l]').forEach(x=>x.onclick=()=>{ setLight(x.dataset.l); add('s',`Lighting set to ${LIGHT[x.dataset.l][2]}.`); });
-  $('#hab').innerHTML=[['Cabin temp',S.temp.toFixed(1)+' °C'],['O₂',d.o2_pct+' %'],['CO₂',d.ppco2_mmhg+' mmHg'],['Pressure',d.pressure_kpa+' kPa'],['Humidity',d.humidity_pct+' %'],['Sound',S.sound||'off']].map(([k,v])=>`<div><span>${k}</span><b>${v}</b></div>`).join('');
+  const c=S.checkin[S.aid]; $('#mstat').textContent=c?c.status:'NO CHECK-IN'; $('#mstat').className='st '+(c?'s'+c.status:''); $('#mbars').innerHTML=c?bar('Fatigue',c.fatigue,100,'#FFC93C',c.fatigue)+bar('Stress',c.stress,100,'#FF9A3C',c.stress)+bar('Low mood',c.low_mood,100,'#FF5FD2',c.low_mood)+(c.raw?`<p class="note">${esc(c.raw)}</p>`:''):bar('Self-report mood',d.mood,10,'#3DDC97',d.mood+'/10')+bar('Self-report stress',d.stress,10,'#FF9A3C',d.stress+'/10');
+  $('#lights').innerHTML=Object.keys(LIGHT).map(k=>`<button class="${k===S.light?'on':''}" data-l="${k}">${LIGHT[k][1].split(' (')[0].split(' -')[0]}${LIGHT[k][0]?' · '+LIGHT[k][0]+' K':''}</button>`).join(''); document.querySelectorAll('[data-l]').forEach(x=>x.onclick=()=>{ setLight(x.dataset.l); add('s',`Lighting set to ${LIGHT[x.dataset.l][1]}.`); });
+  $('#hab').innerHTML=[['Cabin temp',S.temp.toFixed(1)+' °C'],['O₂',d.o2_pct+' %'],['CO₂ (limit 3)',d.ppco2_mmhg+' mmHg'],['Pressure',d.pressure_kpa+' kPa'],['Humidity',d.humidity_pct+' %'],['Sound',S.sound||'off']].map(([k,v])=>`<div><span>${k}</span><b>${v}</b></div>`).join('');
   $('#sounds').innerHTML=SOUNDS.map(s=>`<button class="${S.sound===s?'on':''}" data-s="${s}">${s}</button>`).join('')+'<button data-s="">stop</button>'; document.querySelectorAll('[data-s]').forEach(x=>x.onclick=()=>x.dataset.s?sound(x.dataset.s):stopAudio());
   $('#ext').innerHTML=[['Surface',e.d.ext_temp_c+' °C'],['Radiation',e.d.ext_radiation_usv_h+' µSv/h'],['Solar activity',e.d.solar_activity+'/9'],['Dust',e.d.dust_level+'/10'],['Sun elevation',e.d.sun_elevation_deg+'°'],['Mission day',e.d.mission_day]].map(([k,v])=>`<div><span>${k}</span><b>${v}</b></div>`).join('');
   $('#eva').textContent=e.eva_ok?'EVA OK':'HOLD EVA'; $('#eva').className='st '+(e.eva_ok?'sGREEN':'sORANGE');
@@ -276,6 +288,6 @@ function frame(ts){ const t=ts/1000, hist=DATA[S.aid].hr; hg.clearRect(0,0,hrc.w
   lg.strokeStyle='#3DDC97'; lg.lineWidth=3; lg.beginPath(); const hb=(t*1.2)%1; for(let x=-34;x<=34;x++){ const k=(x+34)/68; const y=Math.abs(k-0.5)<0.08?-Math.sin((k-0.42)/0.16*Math.PI*2)*(hb<0.3?18:12):0; x===-34?lg.moveTo(cx-14+x,cy+18+y):lg.lineTo(cx-14+x,cy+18+y); } lg.stroke();
   requestAnimationFrame(frame); }
 render(); requestAnimationFrame(frame);
-setTimeout(()=>{ add('s',"Hi, I'm SELENE, your lunar habitat health companion. I run fully offline. Ask me how you're doing, or try the buttons below."); },400);
+setTimeout(()=>{ add('s',"Hi, I'm SELENE, your lunar habitat health companion. The crew data here is simulated. My replies come from rules running in your browser, with no server. Ask me how you're doing, or try the buttons below."); },400);
 </script>
 </body></html>

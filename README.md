@@ -207,6 +207,38 @@ speech rate. The first 5 check-ins learn each astronaut's own baseline. After th
 stress and low mood are scored as robust z-scores against that baseline, with trend and
 "says fine, but behaviour differs" flags.
 
+## ⚖️ Design decisions, limits and failure modes
+
+**Where the numbers come from**
+
+| Value SELENE uses | Source |
+|---|---|
+| Cabin CO₂ alert above 3 mmHg (1-hour average), watch above 2.5 mmHg | NASA-STD-3001 Vol 2 [V2 6004]; NASA OCHMO-TB-004 (headache risk below 1% needs < 2.5 mmHg) |
+| Cabin pressure 34.5 to 103 kPa | NASA-STD-3001 Vol 2 [V2 6006] |
+| Lighting: phase-shift 6500 K, general 4500 K, pre-sleep 2700 K | ISS Solid State Lighting Assembly modes (NASA JSC, Maida 2016). The 1900 K night mode is our own addition. |
+| Radiation shown against 600 mSv | NASA career effective-dose limit (NASA-STD-3001 Vol 1) |
+| 120 min/day exercise, 60 min resistive | Roughly the ISS countermeasure routine (about 2 h/day split between cardio and the ARED). It's a target, not a rule. |
+
+**Tradeoffs we chose**
+
+- **Rules engine instead of a cloud chatbot by default.** Rules work with no network, give the same answer every time and are easy to check. The cost is that SELENE only understands phrasings we wrote patterns for. A cloud AI mode is optional, and the rules handle crisis and emergency words before any AI sees them.
+- **Face check-in measures expressions, not emotions.** It counts blinks and reads smile, frown and brow scores from MediaPipe. The fatigue, stress and low-mood scores combine these with fixed weights we picked by hand. Nobody has calibrated them against real crew data, so the app calls them a weak hint, not a diagnosis.
+- **Video never leaves the device, and nothing is recorded.** Privacy came first, so ground teams get scores, not footage.
+- **Simple learning (Thompson sampling) instead of a trained model.** It can adapt to one person within a few ratings. The downside is that it learns only from 👍/👎 taps, and a person who never rates suggestions gets no personalisation.
+
+**What can go wrong, and what happens**
+
+| Failure | What SELENE does |
+|---|---|
+| Camera blocked or missing | The check-in falls back to heart-rate variability (HRV) and self-reported mood, and says so |
+| Microphone permission denied | Turns off "Hey Selene" and tells the user to type instead |
+| Crew data file missing or broken | The desktop app loads the demo crew. The web page shows an error and asks you to reload. |
+| Browser storage blocked (private mode) | Learning still works for this visit but isn't saved |
+| Sensor reports CO₂ or pressure out of range | A red or yellow alert with the limit it broke and what to check |
+| Someone types crisis or emergency words | A red alert on the habitat panel. Because this is a simulation, SELENE says plainly that it contacted no one and gives real crisis lines (988 or 911 in the US). |
+
+**Known limits.** The demo crew data is simulated. The EEG numbers stand for the band-power output of a headband we don't have. SELENE is a research and education prototype, not a medical device.
+
 ## 🔒 Privacy
 
 Video and audio are processed in memory and never saved; only numbers are stored, in a

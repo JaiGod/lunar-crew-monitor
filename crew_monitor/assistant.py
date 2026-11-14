@@ -253,12 +253,18 @@ class OfflineBrain:
         run = self.t.run
         if CRISIS.search(t):
             run("raise_alert", {"severity": "RED", "reason": "crew member reports thoughts of self-harm"})
-            return ("I'm really glad you told me. You're not alone up here. I've quietly alerted the flight "
-                    "psychologist and your commander so a real person can talk with you right now. "
-                    "Would you like me to stay with you and do some slow breathing while they connect?")
+            # This is a simulation: the alert goes to the on-screen habitat panel, not to a real person.
+            # Never tell a real user that help is on the way; point them to real crisis lines instead.
+            return ("I'm really glad you told me. In the real habitat this would go straight to the flight "
+                    "psychologist. This program is a simulation and can't reach anyone, so please talk to a "
+                    "real person now: in the US, call or text 988 (Suicide and Crisis Lifeline), or call 911 "
+                    "if you're in danger. Outside the US, findahelpline.com lists a free line for your country. "
+                    "Would you like to do some slow breathing while you reach out?")
         if EMERGENCY.search(t):
             run("raise_alert", {"severity": "RED", "reason": text[:120]})
-            return "Emergency alert raised. The commander and flight surgeon are notified. Stay where you are and tell me what's happening."
+            return ("Simulated emergency alert raised on the habitat panel. In the real habitat this pages the "
+                    "commander and flight surgeon. This program contacts no one: if this is a real emergency "
+                    "on Earth, call your local emergency number (911 in the US) now.")
 
         m = re.search(r"(\d+(?:\.\d+)?)\s*(?:min|minutes?)\b.*?(resist|weights?|strength|squat|ared|run|treadmill|bike|cycl|aerobic|cardio)?", t)
         if m and re.search(r"exercis|work ?out|train|run|bike|cycl|lift|resist|weights|treadmill|squat|cardio", t):
