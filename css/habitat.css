@@ -6,7 +6,8 @@
 #habView .plan{grid-row:span 2}
 #habView .plan svg{width:100%;height:auto;display:block;background:#10161c;border-radius:6px}
 #habView .plan .room{cursor:pointer}
-#habView .plan .room:focus-visible rect.fill{stroke:#ffc94d;stroke-width:.3}
+#habView .plan .room:focus{outline:none}
+#habView .plan .room:focus-visible rect.fill{stroke:#ffc94d;stroke-width:.45}
 #habView .full{grid-column:1/-1}
 #habView .big{font-size:34px;font-weight:600;line-height:1.1}
 #habView .kv{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:14px;margin:8px 0}
