@@ -30,10 +30,18 @@
 
 </div>
 
-**SELENE Web** runs the same offline AI brain, crew health dashboard, brainwaves, smart-habitat
-controls, voice ("Hey Selene"), breathing coach and a camera face check-in, right in the browser.
-It's part of the **Project ARES** lunar habitat (simulation SIM-07 on the
-[Mission Control website](https://jaigod.github.io/LunarSmartAdaptiveHabitat/)).
+**SELENE Web** has three tabs:
+
+| Tab | What it is |
+|---|---|
+| **Talk** | The AI assistant: a particle Moon that reacts while it listens and speaks, text and voice chat ("Hey Selene"), mood check-ins, a breathing coach. |
+| **Dashboard** | The crew's vitals, brainwaves, camera face check-in, circadian lighting, cabin air, lunar exterior, alerts and a crew table. |
+| **Habitat** | A 2D plan of the base with a temperature model for every room, a garden that shows how much of the crew's food it can grow, and a way to connect a heart-rate device. |
+
+It runs in any modern browser with nothing to install, and it is part of the **Project ARES** lunar
+habitat (simulation SIM-07 on the [Mission Control website](https://jaigod.github.io/LunarSmartAdaptiveHabitat/)).
+The crew data in the web version is simulated. The **Habitat tab is web only**; the Windows and Mac
+desktop app has the Talk and Dashboard features but not the Habitat plan.
 
 ## ▶️ Play it: no install needed
 
@@ -72,6 +80,52 @@ Put your simulation's output file in **`data/`** and it's used automatically.
 <br/><sub>Real recording of the app: health summary, a joke, "I feel anxious" (lighting and ocean sounds change), and a brainwave reading.</sub>
 </div>
 
+## 🏠 The Habitat tab
+
+<div align="center"><img src="docs/selene_habitat.jpg" alt="SELENE Habitat tab: floor plan with nine rooms coloured by temperature, room controls, garden and device panel" width="900"/></div>
+
+**Plan.** Nine rooms joined by tunnels (core hub, crew quarters, galley, greenhouse, storm shelter,
+medical, exercise, systems, airlock), drawn to scale in metres with furniture. Rooms are coloured by
+temperature and show where the four crew are at the simulated time of day. Click a room (or press Enter on it).
+
+**Temperature.** Every room has its own thermal model: heat leaks out through the wall to −20 °C
+regolith, people and machines add heat, and a heater or cooler works toward the setpoint you choose.
+Heating and cooling share **9 kW**; if the rooms ask for more, all of them are cut back and the
+page says so. A room outside the 18.3 to 26.7 °C ISS cabin band is flagged. Rooms are slow to change
+(large thermal mass), so use the speed menu (1 s = 1 minute, 10 minutes or 1 hour).
+
+**Garden.** Five crops share 40 m² of beds. Each gives edible biomass per square metre per day
+(potato 18.4, wheat 11.3, tomato 9.8, lettuce 7.1, soybean 6.0 g, from NASA's life support baseline),
+reduced when the greenhouse is outside that crop's best temperature range. The LED lighting is
+150 W/m² and all of it becomes heat the greenhouse cooling must remove, so more beds means more power.
+The default beds grow about **14% of the crew's 10,000 kcal a day**. That is the honest result: a
+real food system needs far more area, and the rest of the diet is stored food.
+
+**Devices.**
+- *Bluetooth heart-rate sensor:* any strap or watch that broadcasts standard Bluetooth heart rate
+  (Polar, Wahoo, Garmin in broadcast mode, many Wear OS watches). Works in Chrome and Edge on PC and
+  Android. The live value appears on the Dashboard for the crew member selected when you connected.
+- *Apple Watch:* a website cannot read an Apple Watch, and iPhone Safari has no Web Bluetooth. You can
+  import the Apple Health `export.xml` (Health app, profile picture, Export All Health Data, unzip) to
+  see the latest reading and recent low, average and high, or run a heart-rate broadcasting app on the
+  watch so it shows up as a Bluetooth sensor. **Neither path has been tested on a real Apple Watch.**
+
+**Voice and text.** Ask on the Habitat tab (or the Talk tab, or say "Hey Selene"):
+
+| Say | SELENE does |
+|---|---|
+| "Set the greenhouse to 23 degrees" / "Make the quarters 20 degrees" | Changes that room's setpoint (greenhouse 15 to 30 °C, other rooms 18 to 26 °C) |
+| "How warm is the galley?" | Current temperature, setpoint and whether it is heating or cooling |
+| "Which rooms are out of range?" | Lists rooms outside the cabin band |
+| "How much food do we grow?" | Garden output in kcal per day and the share of the crew's need |
+| "Show the habitat" | Opens the Habitat tab |
+| "Set temperature to 23 degrees" (no room named) | Changes the habitat default used by every room that you have not set yourself |
+
+**Limits.** The layout is our concept, not a flight design. All thermal and crop numbers are the
+assumptions listed at the bottom of the tab; they are reasonable engineering estimates, not measured
+values. The thermal model is a first-order lumped model (one temperature per room, no air flow between
+rooms), and rooms are not connected to each other thermally. Crew move on a fixed daily schedule.
+
 ## 🌙 The SELENE logo
 
 <div align="center">
@@ -109,7 +163,8 @@ health particles and heartbeat rings around the logo, and a face-and-voice scan 
 | 📈 | **Self-learning** | Helpful / not-helpful ratings and mood changes train a bandit model per astronaut |
 | ⚖️ | **Stability** | Physical balance score and emotional stability from recent moods |
 | 🌑 | **Lunar exterior** | Surface temperature, radiation, solar activity, dust, day/night, EVA advice |
-| 💡 | **Smart habitat** | Circadian lighting (6500 K to 1900 K), temperature, cabin O₂/CO₂/pressure, alerts, schedule |
+| 💡 | **Smart habitat** | Circadian lighting (6500 K to 1900 K), cabin O₂/CO₂/pressure, alerts, schedule |
+| 🏠 | **Habitat plan** *(web only)* | 2D plan with per-room temperature control, a garden that feeds part of the crew, Bluetooth heart-rate devices |
 | 🎵 | **Space music** | Original tracks synthesized in Python (Lunar Drift, Earthrise, Solar Wind, Deep Field) plus soundscapes. Add your own WAVs to `music/` |
 | 😄 | **Jokes and feedback** | Space humor, feedback after every action, nudges when vitals change |
 | 🔒 | **Privacy** | Video and audio are never stored, with a pause button, consent for ground sharing, and delete-my-data |
@@ -151,7 +206,7 @@ The wake phrase is "Hey Selene", or press **Talk**.
 | "Start a breathing exercise" | Guided 4-7-8 breathing |
 | "Set lights to relax / night / focus / day" | Changes the lighting |
 | "Play ocean waves" / "Stop sounds" | Soundscapes |
-| "Set temperature to 23 degrees" | Cabin temperature |
+| "Set temperature to 23 degrees" | Habitat default temperature (for a single room, see the Habitat tab) |
 | "What's my radiation dose?" / "Crew status" / "Habitat status" | Reports |
 | "Schedule a family call" | Adds it to the schedule |
 | "Medical emergency" / any mention of self-harm | **Immediate RED alert** to the commander and flight surgeon or psychologist (always offline, never waits for the network) |
@@ -237,6 +292,18 @@ stress and low mood are scored as robust z-scores against that baseline, with tr
 | Sensor reports CO₂ or pressure out of range | A red or yellow alert with the limit it broke and what to check |
 | Someone types crisis or emergency words | A red alert on the habitat panel. Because this is a simulation, SELENE says plainly that it contacted no one and gives real crisis lines (988 or 911 in the US). |
 
+**Habitat tab failure modes.**
+
+| Failure | What happens |
+|---|---|
+| Heating and cooling demand is above 9 kW | Every room gets the same fraction of what it asked for; the tab shows the percentage and rooms drift out of band |
+| Greenhouse drifts away from a crop's best range | That crop's yield factor drops linearly to zero at 8 °C outside its range |
+| Browser has no Web Bluetooth (Firefox, iPhone Safari) | The Bluetooth button is disabled and says why; Apple Health import still works |
+| Device sends a heart rate under 25 or over 230 bpm | The reading is ignored as a sensor glitch |
+| Device stops sending | The live value is dropped after 30 seconds and the Dashboard shows the simulated one again |
+| `export.xml` has no heart-rate records | The tab says so instead of showing zeros |
+| Habitat script fails to load | Talk and Dashboard keep working; the Habitat tab stays empty and the console shows why |
+
 **Known limits.** The demo crew data is simulated. The EEG numbers stand for the band-power output of a headband we don't have. SELENE is a research and education prototype, not a medical device.
 
 ## 🔒 Privacy
@@ -262,11 +329,18 @@ results only with consent (`python -m crew_monitor consent A1 on`), and
 python -m unittest discover tests
 ```
 
+These cover the Python assistant, safety replies and data pipeline (11 tests). The web Habitat tab has no
+automated tests yet; it was checked by hand in a browser at phone, tablet and desktop widths.
+
 ## 📁 Project files
 
 | File | Purpose |
 |---|---|
-| `crew_monitor/gui.py` | Dashboard window (CustomTkinter) |
+| `index.html` | SELENE Web: the Talk and Dashboard tabs, the assistant and the shared styling |
+| `js/habitat.js`, `css/habitat.css` | SELENE Web: the Habitat tab (plan, thermal model, garden, devices, room voice commands) |
+| `js/device.js` | Touch, keyboard-focus and large-screen helpers shared across Project ARES sites |
+| `web/demo_crew.json` | Simulated crew data for the web version |
+| `crew_monitor/gui.py` | Desktop dashboard window (CustomTkinter) |
 | `crew_monitor/assistant.py` | SELENE: tools, offline brain, Claude brain, safety rules |
 | `crew_monitor/voice_io.py` | Microphone → text, text → speech, wake word |
 | `crew_monitor/logo.py` | The SELENE logo, drawn in code |

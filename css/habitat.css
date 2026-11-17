@@ -1,0 +1,39 @@
+/* Habitat tab. Same flat slate panels as the rest of SELENE; colour only carries meaning. */
+#habView{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:14px;padding:14px;max-width:1500px;margin:0 auto}
+#habView>.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px;min-width:0}
+#habView h3{font-size:15px;font-weight:600;margin-bottom:8px}
+#habView .sub{color:var(--mut);font-size:13px}
+#habView .plan{grid-row:span 2}
+#habView .plan svg{width:100%;height:auto;display:block;background:#10161c;border-radius:6px}
+#habView .plan .room{cursor:pointer}
+#habView .plan .room:focus-visible rect.fill{stroke:#ffc94d;stroke-width:.3}
+#habView .full{grid-column:1/-1}
+#habView .big{font-size:34px;font-weight:600;line-height:1.1}
+#habView .kv{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:14px;margin:8px 0}
+#habView .kv span{color:var(--mut)}
+#habView .stepper{display:flex;align-items:center;gap:8px;margin:8px 0}
+#habView .stepper button,#habView .btn{background:var(--raise);border:1px solid var(--line);border-radius:6px;padding:7px 14px;min-height:36px}
+#habView .stepper button:hover,#habView .btn:hover{border-color:var(--fill)}
+#habView .stepper b{min-width:5.5em;text-align:center;font-size:18px}
+#habView table{width:100%;border-collapse:collapse;font-size:14px}
+#habView th,#habView td{text-align:right;padding:5px 6px;border-bottom:1px solid var(--line)}
+#habView th:first-child,#habView td:first-child{text-align:left}
+#habView th{color:var(--mut);font-weight:500;font-size:13px}
+#habView input[type=range]{width:100%}
+#habView .tag{display:inline-block;padding:1px 8px;border-radius:10px;font-size:12px;border:1px solid var(--line)}
+#habView .ok{color:var(--ok)}#habView .caut{color:var(--caut)}#habView .warn{color:var(--warn)}
+#habView .track{height:8px;background:var(--raise);border-radius:4px;overflow:hidden;margin:4px 0}
+#habView .track i{display:block;height:100%;background:var(--fill)}
+#habView .ask{display:flex;gap:8px;flex-wrap:wrap}
+#habView .ask input{flex:1;min-width:200px;background:var(--raise);border:1px solid var(--line);border-radius:6px;color:var(--txt);padding:9px 12px;font:inherit}
+#habView .say{margin-top:8px;padding:8px 12px;background:var(--raise);border-left:3px solid var(--info);border-radius:4px;font-size:14px;min-height:2.4em}
+#habView .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+#habView .chips button{font-size:13px;padding:4px 10px;border-radius:14px;background:none;border:1px solid var(--line);color:var(--mut)}
+#habView .note{font-size:12.5px;color:var(--mut);margin-top:8px}
+#habView ul.al{margin:6px 0 0 18px;font-size:14px}
+#habView .hr{font-size:30px;font-weight:600;color:var(--hr)}
+@media (max-width:980px){#habView{grid-template-columns:minmax(0,1fr)}#habView .plan{grid-row:auto}}
+#habView .kv>div{display:block!important;text-align:left}
+#habView .kv>div *{display:inline}
+#habView .kv select,#habView .kv button{display:inline-block}
+#habView .kv select{background:var(--raise);color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:4px 6px;margin-left:8px}

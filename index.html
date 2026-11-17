@@ -97,11 +97,11 @@ input{flex:1;min-width:0;background:none;border:0;color:var(--txt);padding:8px 8
 #breath b{font-size:22px;font-weight:600}#breath p{text-align:center;color:var(--mut);margin-top:24px}
 @media (prefers-reduced-motion:reduce){#breath .o{transition:none}}
 footer{color:var(--dim);font-size:13px;padding:18px 24px 28px;max-width:1500px;margin:0 auto}
-</style><script src="js/device.js" defer></script>
+</style><link rel="stylesheet" href="css/habitat.css"><script src="js/device.js" defer></script>
 </head><body>
 <header>
   <div><h1>SELENE</h1><small>Crew health monitor for a lunar habitat (demo)</small></div>
-  <div class="crewbar views" role="tablist" aria-label="View"><button class="pill on" id="vTalk" role="tab" aria-selected="true">Talk</button><button class="pill" id="vDash" role="tab" aria-selected="false">Dashboard</button></div>
+  <div class="crewbar views" role="tablist" aria-label="View"><button class="pill on" id="vTalk" role="tab" aria-selected="true">Talk</button><button class="pill" id="vDash" role="tab" aria-selected="false">Dashboard</button><button class="pill" id="vHab" role="tab" aria-selected="false">Habitat</button></div>
   <div class="crewbar" id="crewbar" role="group" aria-label="Crew member"></div>
   <nav><a href="https://jaigod.github.io/LunarSmartAdaptiveHabitat/">Mission Control</a><a href="https://github.com/JaiGod/lunar-crew-monitor">Source code</a><a href="https://github.com/JaiGod/lunar-crew-monitor/releases/latest">Desktop app</a></nav>
 </header>
@@ -138,6 +138,7 @@ footer{color:var(--dim);font-size:13px;padding:18px 24px 28px;max-width:1500px;m
     <section class="card span2"><h3>Crew</h3><div class="tablewrap"><table class="crewt" id="crew"></table></div></section>
   </div>
 </div>
+<div id="habView" hidden aria-label="Habitat"></div>
 <div id="breath"><div><div class="o" id="borb"><b id="bt">Breathe in</b></div><p id="bp">4-7-8 breathing, round 1 of 4. Click or press Esc to stop.</p></div></div>
 <footer>SELENE is part of Project ARES, a NASA HUNCH lunar habitat entry by Jaineil R. with Angel C. and Farhan K., 2026. It is a research and education prototype, not a medical device.</footer>
 <script type="module">
@@ -210,6 +211,7 @@ function reply(text){ const t=text.toLowerCase().trim(); let m;
   if(/breath|calm me|panic|relax me/.test(t)){ setTimeout(breathe,700); return "Let's breathe together. Breathe in through your nose for 4, hold for 7, and out slowly for 8. We'll do four rounds."; }
   if(/light|mode|lamp/.test(t)){ const w=Object.keys(LALIAS).find(k=>new RegExp('\\b'+k+'\\b').test(t)); if(w){ setLight(LALIAS[w]); return `Lighting set to ${LIGHT[LALIAS[w]][1]}.`; } }
   if(/lights? (off|out)/.test(t)){ setLight('sleep'); return 'Lights off. Sleep well.'; }
+  { const hx=window.SELENE_HAB&&window.SELENE_HAB.reply(t); if(hx) return hx; }
   if((m=t.match(/(?:temperature|temp|warmer|cooler|degrees).*?(\d{2}(?:\.\d)?)|(\d{2}(?:\.\d)?)\s*degrees/))){ S.temp=Math.min(26,Math.max(18,+(m[1]||m[2]))); render(); return `Cabin temperature set to ${S.temp.toFixed(1)} °C.`; }
   if(/radiation|dose/.test(t)){ const d=cur(); return `Mission dose is ${d.radiation_msv.toFixed(1)} mSv, ${(d.radiation_msv/6).toFixed(1)}% of NASA's 600 mSv career limit; ${d.radiation_today_msv.toFixed(2)} mSv so far today.`; }
   if(/crew|everyone|team/.test(t)) return 'Crew status: '+Object.keys(DATA).map(k=>{ const a=S.aid; S.aid=k; const s=phys().status; S.aid=a; return `${k} physical ${s.toLowerCase()}, mental ${(S.checkin[k]?.status||'no check-in').toLowerCase()}`; }).join('; ')+'.';
@@ -288,17 +290,17 @@ function simulateCheckin(){ const d=cur(); S.checkin[S.aid]={raw:'No camera: est
 $('#checkin').onclick=checkin;
 $('#mood').onclick=()=>{ const d=document.createElement('div'); d.className='m s'; d.textContent='How do you feel right now?'; const f=document.createElement('div'); f.className='fb'; ['happy','calm','tired','anxious','sad','lonely'].forEach(m=>{ const x=document.createElement('button'); x.textContent=m; x.onclick=()=>{ f.remove(); ask('I feel '+m); }; f.appendChild(x); }); d.appendChild(f); showView('talk'); log.appendChild(d); afterAdd('s'); };
 // ---------------------------------------------------------------- views
-function showView(v){ const talk=v==='talk'; $('#talkView').hidden=!talk; $('#dashView').hidden=talk;
-  $('#vTalk').classList.toggle('on',talk); $('#vDash').classList.toggle('on',!talk); $('#vTalk').setAttribute('aria-selected',talk); $('#vDash').setAttribute('aria-selected',!talk);
+function showView(v){ const talk=v==='talk', hab=v==='hab', dash=!talk&&!hab; $('#talkView').hidden=!talk; $('#dashView').hidden=!dash; $('#habView').hidden=!hab;
+  [['#vTalk',talk],['#vDash',dash],['#vHab',hab]].forEach(([id,on])=>{ $(id).classList.toggle('on',on); $(id).setAttribute('aria-selected',on); }); document.dispatchEvent(new CustomEvent('selene-view',{detail:v}));
   if(talk) $('#in').focus({preventScroll:true}); else window.scrollTo(0,0); }
-$('#vTalk').onclick=()=>showView('talk'); $('#vDash').onclick=()=>showView('dash');
+$('#vTalk').onclick=()=>showView('talk'); $('#vDash').onclick=()=>showView('dash'); $('#vHab').onclick=()=>showView('hab');
 // ---------------------------------------------------------------- render
 function bar(label,v,max,color,txt){ return `<div class="row"><span>${label}</span><div class="track"><i style="width:${Math.min(100,v/max*100)}%;background:${color}"></i></div><span>${txt}</span></div>`; }
 const SL={GREEN:'Normal',YELLOW:'Caution',ORANGE:'Caution',RED:'Warning'};
 function render(){ const p=phys(), d=p.d, b=brain(), e=exterior();
   $('#crewbar').innerHTML=Object.keys(DATA).map(k=>`<button class="pill ${k===S.aid?'on':''}" data-a="${k}">${k}</button>`).join(''); document.querySelectorAll('[data-a]').forEach(x=>x.onclick=()=>{S.aid=x.dataset.a; render();});
   $('#pstat').textContent=SL[p.status]; $('#pstat').className='st s'+p.status;
-  $('#vhr').textContent=fmt(d.heart_rate); $('#vspo2').textContent=fmt(d.spo2,'',1); $('#vhrv').textContent=fmt(d.hrv_ms); $('#vtemp').textContent=fmt(d.skin_temp_c,'',1);
+  $('#vhr').textContent=(S.live&&S.liveFor===S.aid&&Date.now()-S.live.t<30000)?S.live.hr:fmt(d.heart_rate); $('#vspo2').textContent=fmt(d.spo2,'',1); $('#vhrv').textContent=fmt(d.hrv_ms); $('#vtemp').textContent=fmt(d.skin_temp_c,'',1);
   const F=(v,t)=>v>=t?'var(--ok)':'var(--fill)';
   $('#bars').innerHTML=bar('Exercise',p.ex,120,F(p.ex,120),`${p.ex.toFixed(0)} / 120 min`)+bar('Resistive',p.res,60,F(p.res,60),`${p.res.toFixed(0)} / 60 min`)+bar('Water',p.water,2500,F(p.water,2500),`${(p.water/1000).toFixed(1)} / 2.5 L`)+bar('Sleep',p.sleep,8,p.sleep<6?'var(--caut)':F(p.sleep,8),`${(+p.sleep).toFixed(1)} / 8 h`)+bar('Career dose',d.radiation_msv,600,d.radiation_msv>480?'var(--caut)':'var(--fill)',`${d.radiation_msv.toFixed(1)} / 600 mSv`);
   const top=Object.entries(b.sh).sort((x,y)=>y[1]-x[1])[0][0];
@@ -355,6 +357,8 @@ function drawLogo(t){ const W=lc.width, H=lc.height, cx=W/2, cy=H/2, R=W*0.41, d
     lg.fillStyle=`rgba(${lcol[0]|0},${lcol[1]|0},${lcol[2]|0},${a.toFixed(3)})`;
     lg.fillRect(cx+x*R*d-size/2, cy-y*R*d-size/2, size, size); } }
 
+window.SELENE={S,ask,listen,showView,render};
+import('./js/habitat.js').then(m=>m.init(window.SELENE)).catch(e=>console.warn('Habitat tab failed to load',e));
 render(); requestAnimationFrame(frame);
 setTimeout(()=>{ add('s',`Good ${(h=>h<12?'morning':h<18?'afternoon':'evening')(new Date().getHours())}, ${S.aid}. `+(phys().status==='GREEN'?'Your numbers look steady today.':'One of your numbers needs a look; see Alerts.')+" Ask how you're doing, log exercise or water, or tell me how you feel.\n\nThis is a demo: the crew data is simulated."); },400);
 </script>
