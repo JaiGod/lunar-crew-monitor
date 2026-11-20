@@ -43,6 +43,24 @@ habitat (simulation SIM-07 on the [Mission Control website](https://jaigod.githu
 The crew data in the web version is simulated. The **Habitat tab is web only**; the Windows and Mac
 desktop app has the Talk and Dashboard features but not the Habitat plan.
 
+## 🤖 AI mode (Claude or free AI)
+
+On the web version, click **AI mode** under the chat box to connect an AI. SELENE then talks naturally, while her onboard rules still run every command (logging water, exercise and sleep, lights, music, check-ins) on your device.
+
+| AI | Cost |
+|---|---|
+| Claude (Anthropic) | Paid API key |
+| Gemini (Google) | Free key from aistudio.google.com |
+| Llama via Groq or OpenRouter | Free key |
+| Gemini Nano | Free, no key, built into recent desktop Chrome |
+| OpenAI | Paid API key |
+
+- Crisis and emergency words never go to an AI. They are always handled on the device, with real crisis lines.
+- The AI gets SELENE's live (simulated) data and is told never to invent readings or diagnose.
+- If one AI fails, SELENE tries the next connected one, then falls back to her onboard reply.
+- Connected AIs appear as linked icons beside the SELENE title (DUAL LINK when two are connected), and every AI reply says which AI wrote it.
+- Connections are shared with [LUNA-X AI](https://jaigod.github.io/LUNA-AI/), the habitat's command AI: a key saved with "Remember" works on both sites. Keys stay in your browser and go only to their own provider, so use keys with spending limits.
+
 ## ▶️ Play it: no install needed
 
 <div align="center">

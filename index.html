@@ -108,7 +108,7 @@ footer{color:var(--dim);font-size:13px;padding:18px 24px 28px;max-width:1500px;m
 <main class="talk" id="talkView">
   <div class="orb"><canvas id="logo" width="560" height="560" role="img" aria-label="SELENE, a Moon made of particles"></canvas>
     <div class="who"><b>SELENE</b><span id="lstate">idle</span></div>
-    <p class="mode">Crew health assistant for a lunar habitat. Rules run in your browser; nothing is sent to a server.</p></div>
+    <p class="mode">Crew health assistant for a lunar habitat. Rules run in your browser. Nothing is sent to a server unless you turn on AI mode.</p></div>
   <div class="log" id="log" aria-live="polite"></div>
   <div class="compose">
     <div class="quick" id="quick"></div>
@@ -233,8 +233,8 @@ const log=$('#log');
 function add(cls,t,fb){ const d=document.createElement('div'); d.className='m '+cls; d.textContent=t; if(fb&&lastMood){ const lm={...lastMood}; const f=document.createElement('div'); f.className='fb'; f.innerHTML='<button>Helpful</button><button>Not helpful</button>'; f.children[0].onclick=()=>{rate(lm.mood,lm.a,1);f.textContent='Thanks, I\'ll remember that works for you.';}; f.children[1].onclick=()=>{rate(lm.mood,lm.a,0);f.textContent='Got it, I\'ll try something different next time.';}; d.appendChild(f);} log.appendChild(d); afterAdd(cls); }
 function afterAdd(cls){ if(cls==='u') $('#talkView').classList.add('chatting'); if(!$('#talkView').classList.contains('chatting')) return; requestAnimationFrame(()=>window.scrollTo({top:document.body.scrollHeight,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'})); }
 let state='idle'; const setState=s=>{state=s; $('#lstate').textContent=s;};
-function say(t){ add('s',t,/Was that helpful\?$/.test(t)); if(!S.voice||!('speechSynthesis' in window)){ setState('idle'); return; } const u=new SpeechSynthesisUtterance(t.replace(/°C/g,' degrees').replace(/µSv/g,'micro sieverts').replace(/mSv/g,'milli sieverts')); const v=speechSynthesis.getVoices().find(v=>/female|zira|samantha|aria|jenny|libby/i.test(v.name)); if(v) u.voice=v; u.rate=1.02; u.onstart=()=>setState('speaking'); u.onend=()=>setState('idle'); u.onerror=()=>setState('idle'); speechSynthesis.speak(u); setTimeout(()=>{ if(state==='thinking') setState('idle'); },2500); }
-function ask(t){ if(!t.trim()) return; add('u',t); setState('thinking'); setTimeout(()=>say(reply(t)),420); }
+function say(t,via){ add('s',t,/Was that helpful\?$/.test(t)); if(via&&window.SELENE_AI) window.SELENE_AI.tag(log.lastElementChild,via); if(!S.voice||!('speechSynthesis' in window)){ setState('idle'); return; } const u=new SpeechSynthesisUtterance(t.replace(/°C/g,' degrees').replace(/µSv/g,'micro sieverts').replace(/mSv/g,'milli sieverts')); const v=speechSynthesis.getVoices().find(v=>/female|zira|samantha|aria|jenny|libby/i.test(v.name)); if(v) u.voice=v; u.rate=1.02; u.onstart=()=>setState('speaking'); u.onend=()=>setState('idle'); u.onerror=()=>setState('idle'); speechSynthesis.speak(u); setTimeout(()=>{ if(state==='thinking') setState('idle'); },2500); }
+function ask(t){ if(!t.trim()) return; add('u',t); setState('thinking'); const A=window.SELENE_AI; if(A&&A.active()){ A.answer(t).then(r=>say(r.text,r.via)).catch(e=>{ console.warn(e); say('Sorry, something went wrong with the AI link. Try again, or turn AI mode off.'); }); return; } setTimeout(()=>say(reply(t)),420); }
 $('#f').onsubmit=e=>{e.preventDefault(); ask($('#in').value); $('#in').value='';};
 ['How am I doing?','I drank 500 ml of water','Log 45 minutes of resistive exercise','I feel anxious','Start a breathing exercise','What can you do?'].forEach(q=>{ const b=document.createElement('button'); b.type='button'; b.textContent=q; b.onclick=()=>ask(q); $('#quick').appendChild(b); });
 $('#mute').onclick=()=>{ S.voice=!S.voice; $('#mute').textContent='Voice: '+(S.voice?'on':'off'); if(!S.voice) speechSynthesis.cancel(); };
@@ -357,7 +357,8 @@ function drawLogo(t){ const W=lc.width, H=lc.height, cx=W/2, cy=H/2, R=W*0.41, d
     lg.fillStyle=`rgba(${lcol[0]|0},${lcol[1]|0},${lcol[2]|0},${a.toFixed(3)})`;
     lg.fillRect(cx+x*R*d-size/2, cy-y*R*d-size/2, size, size); } }
 
-window.SELENE={S,ask,listen,showView,render};
+window.SELENE={S,ask,listen,showView,render,reply,phys,brain,exterior,CRISIS,EMERG,say};
+import('./js/ai.js').then(m=>{ window.SELENE_AI=m.init(window.SELENE); }).catch(e=>console.warn('AI mode failed to load',e));
 import('./js/habitat.js').then(m=>m.init(window.SELENE)).catch(e=>console.warn('Habitat tab failed to load',e));
 render(); requestAnimationFrame(frame);
 setTimeout(()=>{ add('s',`Good ${(h=>h<12?'morning':h<18?'afternoon':'evening')(new Date().getHours())}, ${S.aid}. `+(phys().status==='GREEN'?'Your numbers look steady today.':'One of your numbers needs a look; see Alerts.')+" Ask how you're doing, log exercise or water, or tell me how you feel.\n\nThis is a demo: the crew data is simulated."); },400);
